@@ -2,7 +2,6 @@ package com.funnywolf.littledemon.fragments
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +16,7 @@ class DragCloseFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.dragCloseLayout.setOnCloseListener(this::onDragClose)
+        view.dragCloseLayout.setCanScrollView(view.scrollView)
     }
 
     private fun onDragClose(): Boolean {

@@ -3,9 +3,11 @@ package com.funnywolf.littledemon.views
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
 import android.widget.FrameLayout
 
 class DragCloseLayout: FrameLayout {
+    private var canScrollView: View? = null
     private var onCloseListener: OnCloseListener? = null
     private var downRawY = 0.0f
     private var lastRawY = 0.0f
@@ -21,14 +23,14 @@ class DragCloseLayout: FrameLayout {
         when (ev.action) {
             MotionEvent.ACTION_DOWN -> {
                 downRawY = ev.rawY
-                lastRawY = ev.rawY
             }
             MotionEvent.ACTION_MOVE -> {
-                if (shouldHandleEvent((ev.rawY - downRawY).toInt())) {
+                if (shouldHandleEvent((downRawY - ev.rawY).toInt())) {
                     return true
                 }
             }
         }
+        lastRawY = ev.rawY
         return super.onInterceptTouchEvent(ev)
     }
 
@@ -37,10 +39,11 @@ class DragCloseLayout: FrameLayout {
             return super.onTouchEvent(event)
         }
         when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                downRawY = event.rawY
+            }
             MotionEvent.ACTION_MOVE -> {
                 scrollBy(0, (lastRawY - event.rawY).toInt())
-                lastRawY = event.rawY
-                return true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (Math.abs(downRawY - event.rawY) > measuredHeight / 5) {
@@ -52,25 +55,24 @@ class DragCloseLayout: FrameLayout {
                 }
             }
         }
-        return super.onTouchEvent(event)
+        lastRawY = event.rawY
+        return true
     }
 
     private fun shouldHandleEvent(dy: Int): Boolean {
-        if (childCount <= 0) {
-            return false
-        }
-        if (!getChildAt(0).canScrollVertically(-dy)) {
-            return true
-        }
-        return false
+        return (canScrollView?.canScrollVertically(dy) != true)
     }
 
-    fun setOnCloseListener(listener: () -> Boolean) {
+    fun setOnCloseListener(listener: (() -> Boolean)?) {
         onCloseListener = object : OnCloseListener {
             override fun onClose(): Boolean {
-                return listener()
+                return listener?.invoke() ?: false
             }
         }
+    }
+
+    fun setCanScrollView(v: View?) {
+        canScrollView = v
     }
 
     interface OnCloseListener {

@@ -6,7 +6,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <ScrollView android:layout_marginTop="40dp" android:layout_width="match_parent" android:layout_height="match_parent">
+    <TextView
+            android:text="Drag Close Test"
+            android:textSize="24sp"
+            android:textColor="#FFFF"
+            android:background="#F888"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"/>
+
+    <ScrollView android:id="@+id/scrollView" android:layout_marginTop="40dp" android:layout_width="match_parent" android:layout_height="match_parent">
         <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
             <ImageView android:src="@mipmap/bg0" android:scaleType="centerCrop" android:layout_width="match_parent" android:layout_height="match_parent"/>
             <ImageView android:src="@mipmap/bg1" android:scaleType="centerCrop" android:layout_width="match_parent" android:layout_height="match_parent"/>

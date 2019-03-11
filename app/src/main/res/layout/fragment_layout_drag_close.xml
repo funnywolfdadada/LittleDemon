@@ -6,10 +6,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <ImageView
-            android:src="@mipmap/bg1"
-            android:scaleType="centerCrop"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+    <ScrollView android:layout_marginTop="40dp" android:layout_width="match_parent" android:layout_height="match_parent">
+        <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+            <ImageView android:src="@mipmap/bg0" android:scaleType="centerCrop" android:layout_width="match_parent" android:layout_height="match_parent"/>
+            <ImageView android:src="@mipmap/bg1" android:scaleType="centerCrop" android:layout_width="match_parent" android:layout_height="match_parent"/>
+            <ImageView android:src="@mipmap/bg2" android:scaleType="centerCrop" android:layout_width="match_parent" android:layout_height="match_parent"/>
+        </LinearLayout>
+    </ScrollView>
 
 </com.funnywolf.littledemon.views.DragCloseLayout>

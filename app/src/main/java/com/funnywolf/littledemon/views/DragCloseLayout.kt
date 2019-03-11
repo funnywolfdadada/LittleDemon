@@ -14,16 +14,29 @@ class DragCloseLayout: FrameLayout {
     constructor(context: Context, attrs: AttributeSet?): super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr)
 
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        if (ev == null) {
+            return super.onInterceptTouchEvent(ev)
+        }
+        when (ev.action) {
+            MotionEvent.ACTION_DOWN -> {
+                downRawY = ev.rawY
+                lastRawY = ev.rawY
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (shouldHandleEvent((ev.rawY - downRawY).toInt())) {
+                    return true
+                }
+            }
+        }
+        return super.onInterceptTouchEvent(ev)
+    }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null) {
             return super.onTouchEvent(event)
         }
-        when(event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                downRawY = event.rawY
-                lastRawY = event.rawY
-                return true
-            }
+        when (event.action) {
             MotionEvent.ACTION_MOVE -> {
                 scrollBy(0, (lastRawY - event.rawY).toInt())
                 lastRawY = event.rawY
@@ -31,7 +44,7 @@ class DragCloseLayout: FrameLayout {
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (Math.abs(downRawY - event.rawY) > measuredHeight / 5) {
-                    if (!(onCloseListener?.onClose() ?: false)) {
+                    if (onCloseListener?.onClose() != true) {
                         scrollTo(0, 0)
                     }
                 } else {
@@ -40,6 +53,16 @@ class DragCloseLayout: FrameLayout {
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun shouldHandleEvent(dy: Int): Boolean {
+        if (childCount <= 0) {
+            return false
+        }
+        if (!getChildAt(0).canScrollVertically(-dy)) {
+            return true
+        }
+        return false
     }
 
     fun setOnCloseListener(listener: () -> Boolean) {

@@ -2,8 +2,10 @@ package com.funnywolf.littledemon
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.view.View
 import com.funnywolf.littledemon.fragments.DragCloseFragment
+import com.funnywolf.littledemon.fragments.DragExtendFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -16,13 +18,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        dragClose.setOnClickListener(this::openDragCloseTest)
+        dragClose.setOnClickListener {
+            openFragment(DragCloseFragment())
+        }
+
+        dragExtend.setOnClickListener {
+            openFragment(DragExtendFragment())
+        }
+
     }
 
-    private fun openDragCloseTest(v: View) {
+    private fun openFragment(fragment: Fragment) {
         supportFragmentManager
             .beginTransaction()
-            .add(R.id.fragment_content, DragCloseFragment())
+            .add(R.id.fragment_content, fragment)
             .commit()
     }
 }

@@ -30,7 +30,7 @@ class DragCloseLayout: FrameLayout {
                 dragDir = 0
             }
             MotionEvent.ACTION_MOVE -> {
-                if (shouldHandleEvent((downRawY - ev.rawY).toInt())) {
+                if (shouldHandleEvent((lastRawY - ev.rawY).toInt())) {
                     return true
                 }
             }
@@ -72,7 +72,7 @@ class DragCloseLayout: FrameLayout {
     }
 
     private fun shouldHandleEvent(dy: Int): Boolean {
-        return (canScrollView?.canScrollVertically(dy) != true)
+        return dy != 0 && (canScrollView?.canScrollVertically(dy) != true)
     }
 
     private fun canScrollY(dy: Int): Int {

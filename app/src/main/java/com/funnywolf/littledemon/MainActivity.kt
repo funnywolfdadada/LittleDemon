@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment
 import android.view.View
 import com.funnywolf.littledemon.fragments.DragCloseFragment
 import com.funnywolf.littledemon.fragments.DragExtendFragment
+import com.funnywolf.littledemon.fragments.NestScrollViewFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -26,12 +27,17 @@ class MainActivity : AppCompatActivity() {
             openFragment(DragExtendFragment())
         }
 
+        nestScrollView.setOnClickListener {
+            openFragment(NestScrollViewFragment())
+        }
+
     }
 
     private fun openFragment(fragment: Fragment) {
         supportFragmentManager
             .beginTransaction()
             .add(R.id.fragment_content, fragment)
+            .addToBackStack(null)
             .commit()
     }
 }

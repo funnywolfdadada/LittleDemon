@@ -3,7 +3,7 @@ package com.funnywolf.littledemon
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.view.View
+import com.funnywolf.littledemon.fragments.ConstraintLayoutTestFragment
 import com.funnywolf.littledemon.fragments.DragCloseFragment
 import com.funnywolf.littledemon.fragments.DragExtendFragment
 import com.funnywolf.littledemon.fragments.NestScrollViewFragment
@@ -29,6 +29,10 @@ class MainActivity : AppCompatActivity() {
 
         nestScrollView.setOnClickListener {
             openFragment(NestScrollViewFragment())
+        }
+
+        constrainLayoutTest.setOnClickListener {
+            openFragment(ConstraintLayoutTestFragment())
         }
 
     }

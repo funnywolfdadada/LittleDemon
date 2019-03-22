@@ -5,3 +5,5 @@ import android.content.Context
 fun getScreenHeight(context: Context) = context.resources.displayMetrics.heightPixels
 
 fun getScreenWidth(context: Context) = context.resources.displayMetrics.widthPixels
+
+fun dp2pix(context: Context, dp: Int) = (context.resources.displayMetrics.density * dp).toInt()

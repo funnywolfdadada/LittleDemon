@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.ImageView
 import com.funnywolf.littledemon.R
+import com.funnywolf.littledemon.utils.getScreenHeight
 import kotlinx.android.synthetic.main.fragment_layout_simple_view_pager.view.*
 
 class SimpleViewPagerFragment: Fragment() {
@@ -22,6 +23,8 @@ class SimpleViewPagerFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        view.layoutParams.height = getScreenHeight(context ?: return)
+        view.requestLayout()
         images.forEach {
             val imageView = ImageView(context)
             imageView.layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)

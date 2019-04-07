@@ -18,6 +18,10 @@ class NestScrollViewFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val parmas = content.layoutParams
         parmas.height = getScreenHeight(context ?: return)
+        fragmentManager
+            ?.beginTransaction()
+            ?.add(R.id.content, SimpleViewPagerFragment())
+            ?.commit()
     }
 
 }

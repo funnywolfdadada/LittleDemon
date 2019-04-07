@@ -16,5 +16,9 @@ class DragExtendFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        fragmentManager
+            ?.beginTransaction()
+            ?.add(R.id.topLayout, SimpleViewPagerFragment())
+            ?.commit()
     }
 }

@@ -14,6 +14,18 @@
             android:layout_height="match_parent">
 
         <TextView
+                android:id="@+id/constrainLayoutTest"
+                android:text="Constrain Layout Test"
+                android:textSize="24sp"
+                android:textColor="#FFFF"
+                android:background="#3000"
+                android:layout_margin="10dp"
+                android:padding="10dp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <TextView
                 android:id="@+id/dragClose"
                 android:text="Drag Close Test"
                 android:textSize="24sp"
@@ -50,8 +62,8 @@
                 android:layout_height="wrap_content"/>
 
         <TextView
-                android:id="@+id/constrainLayoutTest"
-                android:text="Constrain Layout Test"
+                android:id="@+id/scrollAndDragExtend"
+                android:text="Nest ScrollView and Drag Extend"
                 android:textSize="24sp"
                 android:textColor="#FFFF"
                 android:background="#3000"

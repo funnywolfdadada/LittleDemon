@@ -25,7 +25,6 @@ class DragExtentLayout: FrameLayout {
 
     private fun init(context: Context) {
         LayoutInflater.from(context).inflate(R.layout.layout_drag_extend, this, true)
-//        bottomLayout.setBackgroundResource(R.mipmap.bg0)
         topLayout.setBackgroundResource(R.mipmap.bg1)
     }
 

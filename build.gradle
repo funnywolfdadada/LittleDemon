@@ -13,6 +13,7 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+    println("In buildscript, project = ${project.hashCode()}")
 }
 
 allprojects {
@@ -20,8 +21,18 @@ allprojects {
         google()
         jcenter()
     }
+    println("In allprojects, project = ${project.hashCode()}")
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+println("""
+In build.gradle ->
+    gradle is ${gradle.hashCode()}
+    Home dir: ${gradle.gradleHomeDir}
+    User home dir: ${gradle.gradleUserHomeDir}
+    Project: ${project.hashCode()}
+    Root Project Dir: ${rootProject.rootDir}
+""")

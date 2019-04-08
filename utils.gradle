@@ -1,0 +1,27 @@
+def initInUtils() {
+    File propertiesFile = new File(rootProject.projectDir.absolutePath + "/local.properties")
+    Properties properties = new Properties()
+    properties.load(propertiesFile.newDataInputStream())
+    gradle.ext.localSdkPath = properties.get('sdk.dir')
+}
+
+def getVersionNameAdvanced() {
+    def xmlFile = project.file("src/main/AndroidManifest.xml")
+    def rootManifest = new XmlSlurper().parse(xmlFile)
+    return rootManifest['@android:versionName']
+}
+
+ext {
+    getVersionNameAdvanced = this.&getVersionNameAdvanced
+}
+
+initInUtils()
+
+println("""
+In utils.gradle ->
+    gradle is ${gradle.hashCode()}
+    Home dir: ${gradle.gradleHomeDir}
+    User home dir: ${gradle.gradleUserHomeDir}
+    Parent: ${gradle.parent}
+    Local SDK Path: ${gradle.localSdkPath}
+]""")

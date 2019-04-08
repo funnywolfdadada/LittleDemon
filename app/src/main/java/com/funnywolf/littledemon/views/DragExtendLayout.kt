@@ -7,9 +7,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.ScrollView
 
-private const val MOVE_RESISTANCE = 0.5f
-
 class DragExtendLayout: ScrollView {
+
+    companion object {
+        const val MOVE_RESISTANCE = 0.5f
+        const val MOVE_THRESHOLD = 20
+    }
 
     /**
      * 默认未展开状态下子 View 的高度。默认是 0，子 View 不会显露出来
@@ -96,10 +99,9 @@ class DragExtendLayout: ScrollView {
                 dragState.update(ev)
             }
 
-            // UP 和 CANCEL 事件不拦截，为了能让非展开状态下能够收到点击事件
+            // UP 和 CANCEL 判断之前是否拦截，拦截的话就处理
             else -> {
                 if (handledTouchEvent) {
-                    handledTouchEvent = false
                     onTouchUpOrCancel(ev)
                 }
                 dragState.reset()
@@ -109,10 +111,12 @@ class DragExtendLayout: ScrollView {
     }
 
     /**
-     * 在未展开，或者手指向下滑已经划不动的时候返回 true
+     * 在上下滑 && 滑动距离大于阈值 && (未展开 || 手指向下滑已经划不动) 的时候返回 true
      */
     private fun shouldHandleTouchEvent(ev: MotionEvent) =
-       !isExtended || (ev.rawY - dragState.lastRawY > 0 && !canScrollVertically(-1))
+        (Math.abs(ev.rawY - dragState.lastRawY) > Math.abs(ev.rawX - dragState.lastRawX))
+                && (Math.abs(ev.rawY - dragState.lastRawY) > MOVE_THRESHOLD)
+                && (!isExtended || (ev.rawY - dragState.lastRawY > 0 && !canScrollVertically(-1)))
 
     /**
      * 处理移动事件。View 带有一定阻尼地跟着手指移动

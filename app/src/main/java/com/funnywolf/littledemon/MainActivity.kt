@@ -1,8 +1,8 @@
 package com.funnywolf.littledemon
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.fragments.ConstraintLayoutTestFragment
 import com.funnywolf.littledemon.fragments.DragCloseFragment
 import com.funnywolf.littledemon.fragments.DragExtendFragment

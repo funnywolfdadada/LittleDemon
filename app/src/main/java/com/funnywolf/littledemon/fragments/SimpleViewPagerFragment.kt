@@ -1,13 +1,13 @@
 package com.funnywolf.littledemon.fragments
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.view.PagerAdapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.ImageView
+import androidx.fragment.app.Fragment
+import androidx.viewpager.widget.PagerAdapter
 import com.funnywolf.littledemon.R
 import com.funnywolf.littledemon.utils.getScreenHeight
 import kotlinx.android.synthetic.main.fragment_layout_simple_view_pager.view.*

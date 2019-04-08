@@ -3,12 +3,12 @@ package com.funnywolf.littledemon.fragments
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.R
 import com.funnywolf.littledemon.utils.dp2pix
 import kotlinx.android.synthetic.main.fragment_layout_constraint_test.*

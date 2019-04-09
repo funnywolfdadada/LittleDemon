@@ -6,8 +6,9 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ScrollView
+import androidx.core.widget.NestedScrollView
 
-class DragExtendLayout: ScrollView {
+class DragExtendLayout: NestedScrollView {
 
     companion object {
         const val MOVE_RESISTANCE = 0.5f
@@ -45,12 +46,7 @@ class DragExtendLayout: ScrollView {
      * 初始化。主要是先把 View 隐藏掉，待测量完成后移动到相应位置再显示出来，以防屏幕闪烁
      */
     private fun init() {
-        visibility = View.INVISIBLE
-        // 用 post 以保证测量完成
-        post {
-            goToResetPosition(false)
-            visibility = View.VISIBLE
-        }
+//        visibility = View.INVISIBLE
     }
 
     /**
@@ -63,6 +59,7 @@ class DragExtendLayout: ScrollView {
             y = measuredHeight - extendHeight
         }
         isExtended = false
+        visibility = View.VISIBLE
     }
 
     /**
@@ -75,6 +72,7 @@ class DragExtendLayout: ScrollView {
             y = 0.0f
         }
         isExtended = true
+        visibility = View.VISIBLE
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
@@ -84,7 +82,7 @@ class DragExtendLayout: ScrollView {
         }
 
         when {
-            // DOWN 的时候无法确定状态，不拦截
+            // DOWN 的时候无法确定状态，不拦截，做一些拖动相关的初始化工作
             ev.action == MotionEvent.ACTION_DOWN -> {
                 handledTouchEvent = false
                 dragState.start(ev)
@@ -100,22 +98,24 @@ class DragExtendLayout: ScrollView {
             }
 
             // UP 和 CANCEL 判断之前是否拦截，拦截的话就处理
+            // 为了让子 View 不响应错误的点击事件，又能够处理其他滑动相关的事件，传递 CANCEL 事件
             else -> {
                 if (handledTouchEvent) {
                     onTouchUpOrCancel(ev)
+                    handledTouchEvent = false
+                    ev.action = MotionEvent.ACTION_CANCEL
                 }
-                dragState.reset()
             }
         }
         return handledTouchEvent || super.dispatchTouchEvent(ev)
     }
 
     /**
-     * 在上下滑 && 滑动距离大于阈值 && (未展开 || 手指向下滑已经划不动) 的时候返回 true
+     * 在手指上下滑且超过一定阈值的前提下，子 View 未展开或者手指向下滑已经划不动的时候返回 true
      */
     private fun shouldHandleTouchEvent(ev: MotionEvent) =
         (Math.abs(ev.rawY - dragState.lastRawY) > Math.abs(ev.rawX - dragState.lastRawX))
-                && (Math.abs(ev.rawY - dragState.lastRawY) > MOVE_THRESHOLD)
+                && (Math.abs(ev.rawY - dragState.downRawY) > MOVE_THRESHOLD)
                 && (!isExtended || (ev.rawY - dragState.lastRawY > 0 && !canScrollVertically(-1)))
 
     /**
@@ -156,28 +156,6 @@ class DragExtendLayout: ScrollView {
     }
 
     class DragState {
-        companion object {
-            /**
-             * 复位状态，还未收到任何触摸事件
-             */
-            const val RESET = 0
-
-            /**
-             * 开始状态，只收到一个触摸事件，这是可以拿到 lastRawX 和 lastRawY，但是 dragDir 还没有任何意义
-             */
-            const val START = 1
-
-            /**
-             * 开始后状态，收到一个以上触摸事件
-             */
-            const val STARTED = 2
-        }
-
-        /**
-         * 当前的拖拽状态
-         */
-        var state = RESET
-            private set
 
         /**
          * 拖拽的方向：
@@ -187,6 +165,8 @@ class DragExtendLayout: ScrollView {
          */
         var dragDir = 0
             private set
+
+        var downRawY = 0.0f
 
         /**
          * 上一次点击事件的 rawX，在 onInterceptTouchEvent 或 onTouchEvent 的 ACTION_DOWN 事件中设置
@@ -200,22 +180,14 @@ class DragExtendLayout: ScrollView {
         var lastRawY = 0.0f
             private set
 
-        fun reset() {
-            state = RESET
-            dragDir = 0
-            lastRawX = 0.0f
-            lastRawY = 0.0f
-        }
-
         fun start(ev: MotionEvent) {
-            state = START
             dragDir = 0
+            downRawY = ev.rawY
             lastRawX = ev.rawX
             lastRawY = ev.rawY
         }
 
         fun update(ev: MotionEvent) {
-            state = STARTED
             val dy = ev.rawY - lastRawY
             dragDir = when {
                 dy > 0 -> 1

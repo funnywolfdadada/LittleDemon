@@ -3,10 +3,7 @@ package com.funnywolf.littledemon
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.funnywolf.littledemon.fragments.ConstraintLayoutTestFragment
-import com.funnywolf.littledemon.fragments.DragCloseFragment
-import com.funnywolf.littledemon.fragments.DragExtendFragment
-import com.funnywolf.littledemon.fragments.NestScrollViewFragment
+import com.funnywolf.littledemon.fragments.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -35,6 +32,9 @@ class MainActivity : AppCompatActivity() {
             openFragment(ConstraintLayoutTestFragment())
         }
 
+        scrollAndDragExtend.setOnClickListener {
+            openFragment(ScrollAndDragExtentFragment())
+        }
     }
 
     private fun openFragment(fragment: Fragment) {

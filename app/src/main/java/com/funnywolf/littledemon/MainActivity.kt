@@ -35,6 +35,14 @@ class MainActivity : AppCompatActivity() {
         scrollAndDragExtend.setOnClickListener {
             openFragment(ScrollAndDragExtentFragment())
         }
+
+        simpleList.setOnClickListener {
+            openFragment(SimpleListFragment())
+        }
+
+        fragmentViewPager.setOnClickListener {
+            openFragment(FragmentViewPagerFragment())
+        }
     }
 
     private fun openFragment(fragment: Fragment) {

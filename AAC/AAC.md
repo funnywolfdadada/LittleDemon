@@ -1,16 +1,207 @@
 # 基于 Android Architecture Components 的 MVVM 浅析
-
-## 1、前言
+## 0、前言
+官方文档永远是最好的学习资料：  
+[Android Jectpack](https://developer.android.google.cn/jetpack)  
+[Android Jetpack: LiveData 和 Lifecycle 介绍 | 中文教学视频](https://www.bilibili.com/video/av33633628)  
+[Android Jetpack - ViewModel | 中文教学视频](https://www.bilibili.com/video/av29949898)  
+[Android Jetpack Room | 中文教学视频](https://www.bilibili.com/video/av30617550)  
+深入了解还需多看文档和源码。
+## 1、简介
 ### 1.1、AAC 是什么
+AAC ([Android Architecture Components](https://developer.android.google.cn/topic/libraries/architecture/)) 是谷歌推出的一套包含在 [Jetpack](https://developer.android.google.cn/jetpack) 中的，帮助我们构建稳健、可测试且易维护应用的组件库，主要包括 [Lifecycle](https://developer.android.google.cn/topic/libraries/architecture/lifecycle)、[LiveData](https://developer.android.google.cn/topic/libraries/architecture/livedata)、[ViewModel](https://developer.android.google.cn/topic/libraries/architecture/viewmodel)、[Room](https://developer.android.google.cn/topic/libraries/architecture/room)、[WorkManager](https://developer.android.google.cn/topic/libraries/architecture/workmanager) 等一系列好用的工具。**注意**，AAC 并不是一种新的架构，只是一套和架构相关的工具，可以帮助你更加简单高效的构件你想要的架构。
 ### 1.2、AAC 与 MVVM
+MVC (Model-View-Controller)、MVP (Model-View-Presenter) 和 MVVM (Model-View-ViewModel) 在 Android 中的应用大概可以概括为下图（架构分层因人而异，这里只是我自己的一些理解）  
+![](.。/anchitecture.png)  
+在 MVP 的架构中，相互引用对方，`Presenter` 层收到 `View` 层的动作或者拿到 `Model` 层的数据后主动调用 `View` 的一些方法，显示相应的结果。我们一般需要定义 `IView` 和 `IPresenter` 接口，然后 `View` 和 `Presenter` 层相互持有对方的引用，这样就存在很多问题，比如：
+- `View` 和 `Presenter` 解耦不彻底，`Presenter` 需要具体知道 `View` 层的能力
+- 因为 `View` 和 `Model` 之间的通讯和其他业务层面的大小事务都由它来处理，会导致 `Presenter` 过度膨胀
+- `View` 生命周期可能不和 `Presenter` 一致，要考虑内存泄漏等问题
+- 扩展性差，增删 `View` 或变更业务要改动很多代码  
 
+MVVM 采用 `View` 与 `ViewModel` 的数据绑定的方式，`View` 监听相应的数据，并在数据变更时自己更改视图，从而很好地解决了上述问题：
+- `View` 和 `ViewModel` 松耦合，`ViewModel` 不需要持有具体的 `View`，也不需要知道 `View` 的任何东西
+- `ViewModel` 层很轻，`ViewModel` 把新的数据通知到各个 `View`，不关心 `View` 的变动
+- 由于 `ViewModel` 不直接引用 `View`，生命周期更好处理
+- `ViewModel` 不关心 `View` 的变更，不也不关心 `View` 的数量，甚至不关心监听的是不是 `View`
+
+可见 MVVM 更为先进好用，实现 MVVM 的方法也有很多，而 AAC 就是为 MVVM 而生的，通过 AAC 中的 `LiveData` 和 `ViewModel` 等组件，我们可以很容易地在 Android 上实现 MVVM。它的 [Lifecycle](https://developer.android.google.cn/topic/libraries/architecture/lifecycle) 组件可以让我们更有效的管理 app 内的各种生命周期，在配置变更时保存数据，避免内存泄漏，更方便地把数据加载到 UI 中；[LiveData](https://developer.android.google.cn/topic/libraries/architecture/livedata) 用来构建一个可以在数据变更时通知视图的数据对象；[ViewModel](https://developer.android.google.cn/topic/libraries/architecture/viewmodel) 可以存储 UI 相关的数据，并保证在配置变更时不会丢失。
 ## 2、基于 AAC 的 MVVM 简单用法
+### 2.1、LiveData
+`LiveData` 是一个可观察的数据持有类，而且它可以感知其他应用组件 (如 `Activity`、`Fragment` 或 `Service`) 的生命周期，这种感知可确保 `LiveData` 仅更新生命周期处于激活状态（STARTED 和 RESUMED）的观察者。它的主要优点有：
+- UI 与数据同步，利用观察者模式，可以在数据变化时通知 UI
+- 不存在内存泄露，会在观察者对应的生命周期结束后自动移除观察者
+- 不会更新非激活状态（STOPPED）状态的 UI，以免造成崩溃（Fragment Transaction）
+- 不需要手动处理生命周期事件
+- UI 从非激活状态切换到激活状态时，会收到 `LiveData` 的最新数据，数据预加载不再需要考虑 View 的状态
+- `Activity` 和 `Fragment` 重建时也会收到通知
 
+简单用法。假设我们的 `MainActivity` 的视图中有一个 `Button` 和一个 `TextView` 来实现一个简单的计数器，还有一个计数值的 `LiveData`。点击 `Button` 会更新计数值，而 `TextView` 监听该 `LiveData` 来更新自己。示例分析如下：
+``` java
+public class MainActivity extends AppCompatActivity {
+    // 1、MutableLiveData 是什么
+    private MutableLiveData<Integer> mLiveData = new MutableLiveData<>();
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // 初始化工作
+        // ...
+        
+        mLiveData.setValue(0);
+        
+        // 2、LiveData.observe() 的参数都是什么意思
+        // public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer)
+        mLiveData.observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(@Nullable final Integer count) {
+                // Update the UI, in this case, a TextView.
+                mTextView.setText(newName);
+            }
+        });
+        
+        // 3、LiveData 的值怎么更新
+        mButton.setOnClickListener(v -> mLiveData.setValue(mLiveData.getValue() + 1));
+    }
+}
+```
+1、首先 `LiveData` 是一个抽象类，且 `setValue` 和 `postValue` 两个更新 value 的方法都是 `protected` 的，而 `MutableLiveData` 继承 `LiveData`，重写这两个方法，并将访问权限设置为 `public`；  
+2、`public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer)`  
+第一个参数 `LifecycleOwner` 是持有生命周期的对象，比如 `Activity` 和 `Fragment`，可以让 `LiveData` 可以感知它的生命周期，并在生命周期结束时将其移除，避免内存泄漏；第二个参数 `Observer` 是一个接口，它只有一个方法 `void onChanged(T t)`，`LiveData` 会在数据更新时调用这个函数来通知 UI 层的观察者。  
+3、`setValue` 和 `postValue` 两个都可以更新 value，不同之处在于 `setValue` 只能在主线程调用，而 `postValue` 可以用于子线程（**注意**：短时间内多次 `postValue`，`LiveData` 只会保留最后一个来通知观察者）。  
+当然，这只是`LiveData` 用法的简单说明，实际项目中如果这样用会有些问题：
+- 把数据相关的东西放在了 View 层，当然我们可以单独抽一层放 `LiveData` 来解决这个问题
+- 在配置变更（如屏幕旋转）时，`Activity` 或 `Fragment` 会重建导致数据丢失，这个问题当然可以通过 `onSaveInstanceState` 来保留和恢复数据；
+- 如果多个 View 都需要同样的数据源或者相互通讯，难以保证拿到同一个 `LiveData`，单例可以解决这个问题，但数据源不在被需要时也无法回收资源。
+
+上面说的这些问题都可以通过某些手段解决，但是都不是很优雅，而谷歌当然考虑到了，这些问题在接下来的 `ViewModel` 中，都得到了很好的解决。
+### 2.2、ViewModel
+`ViewModel`，顾名思义，是用来存储和管理 View 相关数据的，而 AAC 中的 `ViewModel` 还可以感知生命周期，可以在配置变更（如屏幕旋转）时自动保存数据，还可以在生命周期真的结束时触发回调来清除不必要的请求，以免内存泄漏。而作为 MVVM 的中间层，它还肩负着响应 View 层的动作，以及操作 Model 层请求数据的任务。`ViewModel` 的生命周期如下图所示：  
+![](viewmodel-lifecycle.png)  
+**注意**：`ViewModel` 由于生命周期是长于 View 层（`Activity`，`Fragment` 或 `View`）的，不能（也不需要）持有 View 层的任何东西，如果要使用 context 可以用 `AndroidViewModel`，它内部持有 Application 的 context。  
+简单用法。
+``` java
+public class MyViewModel extends ViewModel {
+    // ...
+    
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void loadUsers() {
+        // 请求 users 数据.
+    }
+    
+    // 1、调用时机
+    @Override
+    protected void onCleared() {
+        // 清除不必要的请求 
+    }
+}
+
+public class MyActivity extends AppCompatActivity {
+    public void onCreate(Bundle savedInstanceState) {
+        // MyActivity 重建时还是能拿到同一个 MyViewModel
+        // 2、ViewModelProviders.of 参数
+        MyViewModel model = ViewModelProviders.of(this).get(MyViewModel.class);
+        model.loadUsers();
+    }
+}
+```
+1、`ViewModel` 的 `onCleared` 函数会在持有它的对象的生命周期结束时调用，以免异步请求造成 `ViewModel` 的内存泄露；   
+2、`public static ViewModelProvider of(@NonNull FragmentActivity activity)` 或 `public static ViewModelProvider of(@NonNull Fragment fragment)`，传入的参数可以是 `Activity` 或 `Fragment`，其内部会拿到 `Activity` 或 `Fragment` 的 `ViewModelStore`，顾名思义就是存储 `ViewModel` 的地方，其内部也只是一个 `HashMap<String, ViewModel>`，键是内部用 `ViewModel` 的 `Class` 的名字拼出的字符串。  
+利用 `ViewModelStore` 存储 `ViewModel` 可以十分方便地管理 `ViewModel` ，前面说的 `ViewModel` 可以在配置变更后存活，其实就是利用 `onSaveInstanceState` 保存下了 `ViewModelStore`，实现方式和保存 `Fragment` 类似（`Bundle` 保存的数据是有限的，之前为了在配置变更时保存大量数据，也有用到 `Fragment` 来存的）。利用 `ViewModelStore` 存储 `ViewModel` 的方式还可以方便 `Fragment` 之间的通讯和数据同步，只要多个 `Fragment` 隶属于 **同一个 `Activity`**，他们就可以通过 `Activity` 的 `ViewModelStore` 拿到同一个 `ViewModel`。
+
+### 2.3、MVVM
+虽然 `LiveData` 和 `ViewModel` 单独拿出来用也是强有力的工具，谷歌推出 AAC 的目的明显不仅仅是一个工具，这一整套服务于的架构相关的组件可以帮助我们轻松的打造 MVVM，而且都带着生命周期感知能力。接下来通过一个计数器例子，简单介绍下使用方法。  
+``` java
+public class CountViewModel extends ViewModel {
+    private final MutableLiveData<Integer> mCountLiveData = new MutableLiveData<Integer>();
+    
+    public LiveData<Integer> getCountLiveData() { return mCountLiveData; }
+
+    public void loadCount() {
+        // 可以通过网络或数据库请求数据
+        request.enquen(response -> { 
+            if (response.isSuccess()) {
+                mCountLiveData.postValue(response.data);
+            }
+        });
+    }
+    
+    public void countDown() {
+        // 减小计数
+        if (mCountLiveData.getValue != null) {
+            mCountLiveData.setValue(mCountLiveData.getValue() - 1);
+        } else {
+            loadCount();
+        }
+    }
+    
+    public void countUp() {
+        // 增大计数
+        if (mCountLiveData.getValue != null) {
+            mCountLiveData.setValue(mCountLiveData.getValue() + 1);
+        } else {
+            loadCount();
+        }
+    }
+}
+
+public class ActionFragment extends Fragment {
+    //...
+    
+    @Override
+    public void onViewCreated(View v, Bundle savedInstanceState) {
+        final CountViewModel countViewModel =  ViewModelProviders.of(getActivity()).get(MyViewModel.class);
+        // 改变计数值
+        v.findViewById(R.id.up_buttonn).setOnClickListener(v -> {
+            countViewModel.countUp();
+        });
+        v.findViewById(R.id.down_buttonn).setOnClickListener(v -> {
+            countViewModel.countDown();
+        });;
+    }
+    
+    //...
+}
+
+public class ShowCountFragment extends Fragment {
+    //...
+    
+    @Override
+    public void onViewCreated(View v, Bundle savedInstanceState) {
+        final TextView count = v.findViewById(R.id.count_text_view);
+        // 这里的 getActivity() 是为了拿到同一个 CountViewModel
+        ViewModelProviders.of(getActivity())
+            .get(CountViewModel.class)
+            .getCountLiveData()
+            // 这里的 this 是为了让 LiveData 绑定观察者的生命周期
+            .observe(this, data -> {
+                count.setText(data);
+            });
+    }
+    
+    //...
+}
+```  
+在该例子中，`CountViewModel` 中有一个 `mCountLiveData` 用于保存计数值，还有一组用于更新计数值的方法；`ActionFragment` 和 `ShowCountFragment` 位于同一个 `Activity` 中，这样可以保证两者拿到同一个 `CountViewModel`，`ActionFragment` 的两个按钮用于增减计数，而 `ShowCountFragment` 则监听并显示计数值。  
+这样一个简单的 MVVM 架构的计数器就搭建好了。View 层的 `ShowCountFragment` 绑定 ViewModel 层的 `mCountLiveData`，并在数据变更时更新视图，而 ViewModel 层不需要直接持有任何 View 层的引用（`LiveData` 持有的观察者在 View 层，但是会自动根据生命周期来移除），ViewModel 也不关心监听数据的 View 的数量和类型，View 拿到数据后显示什么东西也都无所谓，多一个 View 只不过是多了一个观察者而已，而且多个 View 不需要借助其他工具（EventBus、RxBus 等事件总线）就可以通过 ViewModel 实现通信。  
+ 对于数据源比较多的场景，谷歌建议我们单独抽出 `Repository` 层（其实就是 Model 层）用于处理数据来源（缓存、数据库或网络），并向上返回数据的 `LiveData`（如 Room）来保持数据的同步，整个架构图如下图所示：  
+![MVVM](mvvm.png)
 ## 3、进一步了解 AAC
 ### 3.1、Lifecycle
+View 层的动态性很强，各个界面切换、视图元素交替出现等都伴随着生命周期的变化，而下层元素的生命周期往往要长于 View 的生命周期，为了不造成资源浪费和内存泄漏，我们时常需要手动管理 View 的生命周期。比如我们有一个显示当前位置的 Activity，我们需要在 onStart 时开始监听位置信息，并在位置变化时更改视图，在 onStop 时注销监听。  
+![](lifecycle-states.png)  
+手动管理 `Activity` 和 `Fragment` 的生命周期是一件十分繁琐而且低效的事情，为了更有效地管理生命周期，许多第三方库（例如 Glide、RxLifecycle）都将监听与分发生命周期地任务交给 `Frgament`，因为 只要将 `Frgament` 塞进 `Activity` 中，`Frgament` 就能与 `Activity` 生命周期同步，然后通过自定义的 `Frgament` 将生命周期事件发送出来。AAC 中地 Lifecycle 组件也是通过这种方式和观察者模式实现了生命周期地自动管理。  
+Lifecycle 组件主要有 `Lifecycle`、`LifecycleObserver` 和一套相关地类组成。`Lifecycle` 定义了一系列生命周期地状态和事件，其唯一子类 `LifecycleRegistry` 则实现了一个作为**生命周期被观察者**所具有的所有能力，以及在生命周期变化时向观察者们分发事件。`LifecycleObserver` 是一个起标识作用地接口，它的子接口 `LifecycleEventObserver` 的 `onStateChanged` 方法在 `LifecycleRegistry` 分发生命周期时会被回调。  
+现在问题来了：  
+1、我们怎么拿到 `Lifecycle`？  
+`Lifecycle` 的持有者都会实现 `LifecycleOwner` 接口，重写 `Lifecycle getLifecycle();`方法，返回自己持有的生命周期对象 `LifecycleRegistry`，`Activity` 和 `Fragment` 都实现了该接口；  
+2、`Lifecycle` 的生命周期事件从哪里来，和之前说的 `Frgament` 有什么关系？  
+`LifecycleOwner` 的实现类既然持有 `Lifecycle`，那肯定就会发送事件啦。`Frgament` 的话比较简单，内部保存了一个 `mLifecycleRegistry`，并在自己的生命周期事件中调用 `mLifecycleRegistry` 的 `handleLifecycleEvent` 方法将事件传递给 `LifecycleRegistry`。`Activity` 自己也持有一个 `mLifecycleRegistry`，但是它不自己发送事件，而是把任务交给了一个叫 `ReportFragment` 的 `Fragment`，其实现也很简单，就是在自己的生命周期事件中拿到 `Activity` 的 `mLifecycleRegistry`，然后再进行分发。      
+3、`LifecycleObserver` 怎么用？  
+需要监听 `Lifecycle` 的对象实现这个接口，然后在 `onStateChanged` 方法中根据不同的生命周期做出相应的动作。比如前面说的监听位置信息的例子，我们就可以单独抽出一个对象来专门做监听操作，实现 `LifecycleObserver` 接口，并自己处理生命周期事件。  
 ### 3.2、ViewModel
 ### 3.3、LiveData
 
-## 4、简单了解下源码
-
-## 5、总结
+## 4、总结

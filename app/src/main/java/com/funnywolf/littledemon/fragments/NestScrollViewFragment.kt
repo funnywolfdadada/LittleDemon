@@ -30,7 +30,7 @@ class NestScrollViewFragment: Fragment() {
         contentView = content
         fragmentManager
             ?.beginTransaction()
-            ?.add(R.id.content, SimpleViewPagerFragment())
+            ?.add(R.id.content, FragmentViewPagerFragment())
             ?.commit()
     }
 

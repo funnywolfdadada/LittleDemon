@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.funnywolf.littledemon.R
+import com.funnywolf.littledemon.utils.getScreenHeight
 import kotlinx.android.synthetic.main.fragment_layout_fragment_view_pager.*
 
 /**
@@ -26,6 +27,7 @@ class FragmentViewPagerFragment: Fragment(), ViewPager.OnPageChangeListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        view.layoutParams.height = getScreenHeight(context ?: return)
         viewPager.adapter = PagerAdapter(getFragments(), fragmentManager ?: return)
         viewPager.addOnPageChangeListener(this)
         tabs = arrayOf(tab1, tab2, tab3)

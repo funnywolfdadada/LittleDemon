@@ -27,7 +27,8 @@ class ConstraintLayoutTestFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val dAngle = 360.0f / N
         val dp100 = dp2pix(context ?: return, 100)
-        for (i in 0..N) {
+        for (i in 0 until N) {
+            println(i)
             val v = ImageView(context ?: return)
             v.setImageResource(R.drawable.ic_sun)
             v.setBackgroundResource(R.drawable.green_circle_background)

@@ -20,8 +20,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        fragmentData.observe(this, Observer {
-            openFragment(it)
+        LiveDataBus.get().observe(Fragment::class.java, this, Observer {
+            openFragment(it ?: return@Observer)
         })
         initViews()
     }
@@ -42,7 +42,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViews() {
         dragClose.setOnClickListener {
-            fragmentData.postValue(DragCloseFragment())
+//            fragmentData.postValue(DragCloseFragment())
+            LiveDataBus.get().post(Fragment::class.java, DragCloseFragment())
         }
 
         dragExtend.setOnClickListener {

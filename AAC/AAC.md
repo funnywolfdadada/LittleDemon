@@ -44,7 +44,7 @@ MVVM 采用 `View` 与 `ViewModel` 的数据绑定的方式，`View` 监听相�
 - 不会更新非激活状态（STOPPED）状态的 UI，以免造成崩溃（Fragment Transaction）
 - 不需要手动处理生命周期事件
 - UI 从非激活状态切换到激活状态时，会收到 `LiveData` 的最新数据，数据预加载不再需要考虑 `View` 的状态
-- `Activity` 和 `Fragment` 重建时也会收到通知
+- `Activity` 和 `Fragment` 重建时也会收到通知（需要和 `ViewModel` 配合使用）
 
 简单用法。假设我们的 `MainActivity` 的视图中有一个 `Button` 和一个 `TextView` 来实现一个简单的计数器，还有一个计数值的 `LiveData`。点击 `Button` 会更新计数值，而 `TextView` 监听该 `LiveData` 来更新自己。示例分析如下：
 ``` java
@@ -251,6 +251,9 @@ class MyLocationListener implements LifecycleObserver {
 ### 3.2、ViewModel
 
 这里我们来扒一扒源码，看 `ViewModel` 是如何创建、如何挺过配置变更，又是何时真正的消失的。  
+
+- `ViewModel` 的创建  
+
 前面我们已经知道 `ViewModel` 都保存在 `ViewModelStore` 中，那只要知道 `ViewModelStore` 如何被创建、保存与销毁就行。在 `ComponentActivity` 的 `getViewModelStore` 方法可以看到 `ViewModelStore` 的创建过程。
 ``` java
 if (mViewModelStore == null) {
@@ -288,9 +291,14 @@ static final class NonConfigurationInstances {
     VoiceInteractor voiceInteractor;
 }
 ```
-是在 `Activity` 的 `NonConfigurationInstances` 中的 `activity`，通过 `NonConfigurationInstances` 我们也能大致看出 `Fragment` 在配置变更的时候会被保存到 `FragmentManagerNonConfig` 中。  
-接下来看如何保存的，在 `ComponentActivity` 的 `onRetainNonConfigurationInstance` 中会分别拿我们定制的 `custom` 和 `ViewModelStore`，然后返回创建的 `NonConfigurationInstances`。而 `onRetainNonConfigurationInstance` 则在 `LocalActivityManager` 的 `dispatchRetainNonConfigurationInstance` 方法中调用。至此我们就知道保存 `ViewModelStore` 的流程，再继续深入源码就无法自拔了。  
-最后看下什么时候真正的销毁 `ViewModel`，调用它的 `onCleared`。
+是在 `Activity` 的 `NonConfigurationInstances` 中的 `activity`，通过 `NonConfigurationInstances` 我们也能大致看出 `Fragment` 在配置变更的时候会被保存到 `FragmentManagerNonConfig` 中。 
+ 
+- 接下来看如何挺过配置变更的  
+
+在 `ComponentActivity` 的 `onRetainNonConfigurationInstance` 中会分别拿我们定制的 `custom` 和 `ViewModelStore`，然后返回创建好的 `NonConfigurationInstances`。而 `onRetainNonConfigurationInstance` 会在配置变更时被 `LocalActivityManager` 的 `dispatchRetainNonConfigurationInstance` 方法中调用，从而保存状态信息。至此我们就知道保存 `ViewModelStore` 的流程，再继续深入源码就无法自拔了。  
+
+- 最后看下什么时候真正的销毁 `ViewModel`，调用它的 `onCleared`
+
 ``` java
 getLifecycle().addObserver(new GenericLifecycleObserver() {
     @Override
@@ -304,12 +312,13 @@ getLifecycle().addObserver(new GenericLifecycleObserver() {
 });
 ```
 在 `ComponentActivity` 的构造函数中有这么一段代码，刚好用到了我们前面说的 `Lifecycle` 和 `LifecycleObserver`，在 ON_DESTROY 时判断下是否是配置变更，不是的话就调用 `ViewModelStore` 的 `clear` 方法，会清除 `ViewModelStore` 中保存的 `ViewModel`，并调用他们的 `clear` 方法，进而调用到 `onCleared`。  
+
 至此，`Activiy` 中的 `ViewModel` 相关生命周期已经分析完了，`Fragment` 中也大同小异，主要涉及 `FragmentManagerImpl`、`FragmentManagerViewModel` 等一些类，感兴趣的可以顺着 `ViewModelStore` 的思路，自己深入了解下。
 
 ### 3.3、LiveData 扩展用法
 
 观察者模式的那套东西都可以玩一些骚操作，责任链、事件总线什么的，`LiveData` 作为一个可观察对象，当然也可以，这里简单分析两个。  
-首先了解下一个叫 `MediatorLiveData` 的对象，它集成 `MutableLiveData`，通过 `public <S> void addSource(@NonNull LiveData<S> source, @NonNull Observer<? super S> onChanged)` 方法实现了增加其他 `LiveData` 作为自己事件源的功能，源 `LiveData` 更新时，会调用传入的 `Observer` 的 `onChanged` 方法做处理。`MediatorLiveData` 是利用 `public void observeForever(@NonNull Observer<? super T> observer)` 方法来添加源的，这个方法不需要传 `LifecycleOwner`，但是需要手动移除观察者，不过不用担心，`MediatorLiveData` 已经帮我们做了。如果 `MediatorLiveData` 已经没有任何观察者，它会自动调用源 `LiveData` 的 `removeObserver` 方法来移除对源 `LiveData` 的监听，以防自己内存泄漏。  
+首先了解下一个叫 `MediatorLiveData` 的对象，它继承自 `MutableLiveData`，通过 `public <S> void addSource(@NonNull LiveData<S> source, @NonNull Observer<? super S> onChanged)` 方法实现了增加其他 `LiveData` 作为自己事件源的功能，源 `LiveData` 更新时，会调用传入的 `Observer` 的 `onChanged` 方法做处理。`MediatorLiveData` 是利用 `public void observeForever(@NonNull Observer<? super T> observer)` 方法来添加源的，这个方法不需要传 `LifecycleOwner`，但是需要手动移除观察者，不过不用担心，`MediatorLiveData` 已经帮我们做了。如果 `MediatorLiveData` 已经没有任何观察者，它会自动调用源 `LiveData` 的 `removeObserver` 方法来移除对源 `LiveData` 的监听，以防自己内存泄漏。  
 利用 `MediatorLiveData` 对象，我们可以做一些事件变换的操作，`Transformations` 的 `map` 和 `switchMap` 就是通过该对象实现的。  
   
 之前的事件总线都需要手动处理生命周期的问题，EventBus 需要手动注销，RxBus 需要 `RxLifecycle` 的扩展库来监听生命周期。有了 LiveData，我们完全可以用很少的代码撸一个具有生命周期感知能力的事件总线，实现很简单（一个简单但实用的 LiveDataBus 只需要一百行代码左右），网上也有很多开源的库，这里只讲下大致思路。  
@@ -321,9 +330,81 @@ getLifecycle().addObserver(new GenericLifecycleObserver() {
 
 **注意**：`ViewModel` 已经能够解决很多场合的通信问题，而且能在不用时释放掉，所以能用 `ViewModel` 通信的就不要用事件总线，除非两个 `Activity` 必须通过某种方式进行通讯，也要先考虑下单例的 `LiveData`，实在不行再用事件总线。  
   
-***最后再强调一遍，不要滥用事件总线***
+**最后再强调一遍，不要滥用事件总线**
 
 ### 3.4、LiveData 源码分析
 `LiveData` 源码不多，这里只简单分析几个 `LiveData` 的特性。  
+- 如何在观察者生命周期结束自动移除观察者
+
+从 `LiveData` 的订阅方法看起 
+``` java
+public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer) {
+    // ...
+    LifecycleBoundObserver wrapper = new LifecycleBoundObserver(owner, observer);
+    ObserverWrapper existing = mObservers.putIfAbsent(observer, wrapper);
+    // ...
+    owner.getLifecycle().addObserver(wrapper);
+}
+```
+可以看到 `LiveData` 不仅是一个可观察对象，同时还是一位观察者，它所观察的就是 `Activity` 或 `Fragment` 等持有 `Lifecycle` 的 `LifecycleOwner`，当然也要把观察自己的观察者保存下来，接下来看下 `LifecycleBoundObserver` 这个观察者是怎么处理 `Lifecycle` 的。首先它继承自 `ObserverWrapper` 这是一个会根据 `Lifecycle` 是否处于激活状态决定是否分数据的观察者，这里先跳过，`LifecycleBoundObserver` 还实现了 `GenericLifecycleObserver` 接口，其实就是前面说过的 `LifecycleEventObserver`，它的生命周期状态回调函数如下：
+``` java
+// LifecycleBoundObserver 的方法
+public void onStateChanged(LifecycleOwner source, Lifecycle.Event event) {
+    if (mOwner.getLifecycle().getCurrentState() == DESTROYED) {
+        removeObserver(mObserver);
+        return;
+    }
+    activeStateChanged(shouldBeActive());
+}
+
+// LiveData 的方法
+public void removeObserver(@NonNull final Observer<? super T> observer) {
+    // ...
+    ObserverWrapper removed = mObservers.remove(observer);
+    // ...
+    removed.detachObserver();
+    removed.activeStateChanged(false);
+}
+
+// LifecycleBoundObserver 的方法
+void detachObserver() {
+    mOwner.getLifecycle().removeObserver(this);
+}
+```
+`onStateChanged` 在判断 `Lifecycle` DESTROYED 的时候调用 `LiveData` 的 `removeObserver`，首先将观察 `LiveData` 的观察者移除，防止内存泄漏，之后再调用`LifecycleBoundObserver` 的 `detachObserver` 将自己从 `LifecycleOwner` 的观察者中移除，自此将相互之间的观察状态接触。
+
+- 生命周期从非激活态到激活态时怎么收到通知的
+
+做预加载的时候，我们可以在 `Activity` 或 `Fragment` 创建时直接请求数据，塞到 `LiveData`，然后只要生命周期处于激活状态，不管什么时候监听 `LiveData`，都能收到最新的消息。我们再来看一下 `LifecycleBoundObserver` 的 `onStateChanged` 方法，它在最后调用了父类的 `activeStateChanged(shouldBeActive())` 方法，来大致看一下
+``` java
+void activeStateChanged(boolean newActive) {
+    if (newActive == mActive) {
+        return;
+    }
+    // immediately set active state, so we'd never dispatch anything to inactive
+    // owner
+    mActive = newActive;
+    boolean wasInactive = LiveData.this.mActiveCount == 0;
+    LiveData.this.mActiveCount += mActive ? 1 : -1;
+    if (wasInactive && mActive) {
+        // 该方法是 LiveData 的
+        onActive();
+    }
+    if (LiveData.this.mActiveCount == 0 && !mActive) {
+        // 该方法是 LiveData 的
+        onInactive();
+    }
+    if (mActive) {
+        dispatchingValue(this);
+    }
+}
+```
+它首先会根据当前的激活状态进行去重，然后会根据 `LiveData` 的观察者处于激活状态的数量和新的状态判断是否调用 `onActive` 和 `onInactive`，这两个也是 `LiveData` 的重要回调，不过都好理解，就不在细说了。最后会判断现在是否是激活状态，是的话就调用 `LiveData` 的 `dispatchingValue` 方法，顾名思义就是 `LiveData` 向其观察者发送通知。而 `dispatchingValue` 接收一个 `ObserverWrapper` 的参数，如果不为空就是说只用通知这个特定的观察者，否则通知所有处于激活的观察者。
+
+- `setValue` 和 `postValue`
+
+`setValue` 比较简单，直接改变当前的值，然后调用 `dispatchingValue(null)` 来通知所有激活状态的观察者，不过必须在主线程调用否则会抛异常。因为其他线程也都可以直接改变当前值的话会造成并发，加锁的话又会影响性能。  
+所以就又搞了一个 `postValue`，它首先在拿到同步锁的情况下把值存到 `mPendingData`，然后向主线程的 `Handler` 抛一个更新当前值的 `mPostValueRunnable`，这个 `mPostValueRunnable` 在执行时也是先拿同步锁，然后调用 `setValue`（现在在主线程）把 `mPendingData` 设置到当前值。在 `mPostValueRunnable` 抛出去之后且还未执行前，如果再次调用 `postValue` 就又会修改 `mPendingData` 的值，而**不会**再次向 `Handler` 抛一次 `mPostValueRunnable`，这样就导致了后设置的值覆盖掉前面设置的，最后只会向观察者们通知最新的值。这个是需要注意的点，谷歌可能认为既然只是在主线程更新 View，那你拿最新的值就行，其他的都无所谓，当然这样也起到流量控制的作用，防止短时间内过多的事件触发无用的回调。
 
 ## 4、总结
+谷歌推出的 AAC 库很好的解决了日常使用中的生命周期问题，使我们可以专心于业务层面的设计，而不需要再为生命周期等问题担忧。`LiveData` 和 `ViewModel` 确实好用，但用的时候也有需要注意的地方，实际应用中要上承 View 层，提供必要的动作和数据，下接 Model 层，做好数据处理，都有很多需要考虑的地方，之后有时间再谈谈我在使用 AAC 的路上的经验和总结。

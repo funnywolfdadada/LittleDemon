@@ -2,6 +2,7 @@ package com.funnywolf.littledemon
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -24,6 +25,10 @@ class MainActivity : AppCompatActivity() {
             openFragment(it ?: return@Observer)
         })
         initViews()
+
+        layout1.layoutDirection = View.LAYOUT_DIRECTION_LTR
+        layout2.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        Log.d(TAG, "${layout1.layoutDirection} ${layout2.layoutDirection}")
     }
 
     override fun onResume() {

@@ -19,18 +19,18 @@ AAC ([Android Architecture Components](https://developer.android.google.cn/topic
 
 MVC (Model-View-Controller)、MVP (Model-View-Presenter) 和 MVVM (Model-View-ViewModel) 在 Android 中的应用大概可以概括为下图（架构分层因人而异，这里只是我自己的一些理解）  
 ![](./anchitecture.png)  
-在 MVP 的架构中，`View` 层和 `Presenter` 层相互引用对方，`Presenter` 层收到 `View` 层的动作或者拿到 `Model` 层的数据后主动调用 `View` 的一些方法，显示相应的结果。我们一般需要定义 `IView` 和 `IPresenter` 之类的接口，然后 `View` 和 `Presenter` 层相互持有对方的引用，这样就存在很多问题，比如：
-- `View` 和 `Presenter` 解耦不彻底，`Presenter` 需要具体知道 `View` 层的能力
-- 因为 `View` 和 `Model` 之间的通讯和其他业务层面的大小事务都由它来处理，会导致 `Presenter` 过度膨胀
-- `View` 生命周期和 `Presenter` 不一致，以及内存泄漏等问题  
+在 MVP 的架构中，View 层和 Presenter 层相互引用对方，Presenter 层收到 View 层的动作或者拿到 Model 层的数据后主动调用 View 的一些方法，显示相应的结果。Presenter 层就像个全职保姆一样，上有 View 层要处理动作和显示，下有 Model 层要请求和处理数据，中间自己还要处理业务逻辑。我们一般需要定义 `IView` 和 `IPresenter` 之类的接口，然后 View 层和 Presenter 层相互持有对方的引用，这样就存在很多问题，比如：
+- View 和 Presenter 解耦不彻底，Presenter 需要具体知道 View 层的能力；
+- 因为 View 层和 Model 层之间的通讯和其他业务层面的大小事务都由它来处理，会导致 Presenter 过度膨胀；
+- View 层的生命周期和 Presenter 层不一致，以及内存泄漏等问题；  
 **注意** 弱引用只能解决内存泄露的问题，无法解决生命周期的问题，比如 `Activity` 已经 `onDestroy`，但并没有被回收的场景
-- 扩展性差，增删 `View` 或变更业务要改动很多代码
+- 扩展性差，增删 View 层或变更业务要改动很多代码。
 
-MVVM 采用 `View` 与 `ViewModel` 的数据绑定的方式，`View` 监听相应的数据，并在数据变更时自己更改视图，从而很好地解决了上述问题：
-- `View` 和 `ViewModel` 松耦合，`ViewModel` 不需要持有具体的 `View`，也不需要知道 `View` 的任何东西
-- `ViewModel` 层很轻，`ViewModel` 把新的数据通知到各个 `View`，不关心 `View` 的变动
-- 由于 `ViewModel` 不直接引用 `View`，生命周期更好处理
-- `ViewModel` 不关心 `View` 的变更，不也不关心 `View` 的数量，甚至不关心监听的是不是 `View`
+MVVM 采用 View 层与 ViewModel 层的数据绑定的方式，View 层监听相应的数据，并在数据变更时自己更改视图，从而很好地解决了上述问题：
+- View 层和 ViewModel 层松耦合，ViewModel 层不需要持有具体的 View，也不需要知道 View 层的任何东西；
+- ViewModel 层很轻，ViewModel 层只需要把新的数据通知到各个 View，而不关心 `View` 的显示；
+- 由于 ViewModel 层不直接引用 View 层，生命周期更好处理；
+- ViewModel 层不关心 View 层的变更，不也不关心 View 的数量，甚至不关心监听的是不是 View。
 
 可见 MVVM 更为先进好用，实现 MVVM 的方法也有很多，而 AAC 就是为 MVVM 而生的，通过 AAC 中的 `LiveData` 和 `ViewModel` 等组件，我们可以很容易地在 Android 上实现 MVVM。它的 [Lifecycle](https://developer.android.google.cn/topic/libraries/architecture/lifecycle) 组件可以让我们更有效的管理 app 内的各种生命周期，在配置变更时保存数据，避免内存泄漏，更方便地把数据加载到 UI 中；[LiveData](https://developer.android.google.cn/topic/libraries/architecture/livedata) 用来构建一个可以在数据变更时通知视图的数据对象，且具有生命周期感知的能力；[ViewModel](https://developer.android.google.cn/topic/libraries/architecture/viewmodel) 可以存储 UI 相关的数据，并保证在配置变更时不会丢失。
 
@@ -407,4 +407,4 @@ void activeStateChanged(boolean newActive) {
 所以就又搞了一个 `postValue`，它首先在拿到同步锁的情况下把值存到 `mPendingData`，然后向主线程的 `Handler` 抛一个更新当前值的 `mPostValueRunnable`，这个 `mPostValueRunnable` 在执行时也是先拿同步锁，然后调用 `setValue`（现在在主线程）把 `mPendingData` 设置到当前值。在 `mPostValueRunnable` 抛出去之后且还未执行前，如果再次调用 `postValue` 就又会修改 `mPendingData` 的值，而**不会**再次向 `Handler` 抛一次 `mPostValueRunnable`，这样就导致了后设置的值覆盖掉前面设置的，最后只会向观察者们通知最新的值。这个是需要注意的点，谷歌可能认为既然只是在主线程更新 View，那你拿最新的值就行，其他的都无所谓，当然这样也起到流量控制的作用，防止短时间内过多的事件触发无用的回调。
 
 ## 4、总结
-谷歌推出的 AAC 库很好的解决了日常使用中的生命周期问题，使我们可以专心于业务层面的设计，而不需要再为生命周期等问题担忧。`LiveData` 和 `ViewModel` 确实好用，但用的时候也有需要注意的地方，实际应用中要上承 View 层，提供必要的动作和数据，下接 Model 层，做好数据处理，都有很多需要考虑的地方，之后有时间再谈谈我在使用 AAC 的路上的经验和总结。
+谷歌推出的 AAC 库很好的解决了日常使用中的生命周期问题，使我们可以专心于业务层面的设计，而不需要再为生命周期等问题担忧。`LiveData` 和 `ViewModel` 确实好用，但用的时候也有需要注意的地方，ViewModel 层实际应用中要上承 View 层，提供必要的动作和数据，下接 Model 层，做好数据处理，都有很多需要考虑的地方，之后有时间再谈谈我在使用 AAC 的路上的经验和总结。

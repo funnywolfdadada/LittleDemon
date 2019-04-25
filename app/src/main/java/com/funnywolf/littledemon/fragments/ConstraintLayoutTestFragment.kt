@@ -41,5 +41,11 @@ class ConstraintLayoutTestFragment: Fragment() {
             contentLayout.addView(v)
             v.rotation = i * dAngle
         }
+        view.postDelayed({
+            val titleX = tv_title.x
+            val iconWidth = right_icon.width
+            val moreX = tv_more.x
+            tv_title.maxWidth = (moreX - iconWidth - titleX).toInt()
+        }, 3000)
     }
 }

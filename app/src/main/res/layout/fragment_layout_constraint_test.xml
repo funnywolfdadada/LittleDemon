@@ -30,19 +30,45 @@
             android:layout_height="80dp"/>
 
     <TextView
-            android:id="@+id/tv2"
-            android:text="啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦啦"
+            android:id="@+id/tv_title"
+            android:text="啦啦啦"
             android:textColor="#000"
             android:textSize="16sp"
+            android:maxLines="1"
             app:layout_constraintLeft_toRightOf="@id/tv1"
             app:layout_constraintTop_toTopOf="@id/tv1"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/tv3"
-            app:layout_constrainedHeight="true"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="10dp"
+            app:layout_constraintRight_toLeftOf="@id/tv_more_barrier"
+            app:layout_constraintHorizontal_bias="0"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:ellipsize="end"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    <View
+            android:id="@+id/right_icon"
+            app:layout_constraintTop_toTopOf="@id/tv1"
+            app:layout_constraintRight_toLeftOf="@id/tv_more"
+            app:layout_constraintHorizontal_bias="0"
+            android:background="#F00"
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+
+    <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/tv_more_barrier"
+            app:barrierDirection="start"
+            app:constraint_referenced_ids="right_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"/>
+
+    <TextView
+            android:id="@+id/tv_more"
+            android:text="查看更多"
+            android:textColor="#000"
+            app:layout_constraintTop_toTopOf="@id/tv1"
+            app:layout_constraintBottom_toBottomOf="@id/tv1"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
     <TextView

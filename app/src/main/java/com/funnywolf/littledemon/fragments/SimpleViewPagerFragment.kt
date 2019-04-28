@@ -1,5 +1,6 @@
 package com.funnywolf.littledemon.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,6 +24,16 @@ class SimpleViewPagerFragment: Fragment() {
     private val images = arrayOf(R.mipmap.bg0, R.mipmap.bg1, R.mipmap.bg2)
     private val imageViews = ArrayList<ImageView>(3)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate: ")
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        Log.d(TAG, "onAttach: ")
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(TAG, "onCreateView: ")
         return inflater.inflate(R.layout.fragment_layout_simple_view_pager, null)
@@ -30,6 +41,8 @@ class SimpleViewPagerFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d(TAG, "onViewCreated: ")
+
         title.setOnClickListener {
             Toast.makeText(context, "click title", Toast.LENGTH_SHORT).show()
         }
@@ -60,6 +73,11 @@ class SimpleViewPagerFragment: Fragment() {
         }
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        Log.d(TAG, "onActivityCreated: ")
+    }
+
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "onStart: ")
@@ -78,5 +96,15 @@ class SimpleViewPagerFragment: Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop: ")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: ")
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        Log.d(TAG, "onDetach: ")
     }
 }

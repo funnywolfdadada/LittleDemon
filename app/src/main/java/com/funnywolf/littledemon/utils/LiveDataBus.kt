@@ -6,7 +6,7 @@ import androidx.lifecycle.Observer
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * @author zhaodongliang @ Zhihu Inc.
+ * @author funnywolf
  * @since 2019/4/11
  */
 class LiveDataBus private constructor(val tag: String) {

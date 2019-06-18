@@ -7,8 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.funnywolf.littledemon.fragments.*
+import com.funnywolf.littledemon.test.testCoroutine
 import com.funnywolf.littledemon.utils.LiveDataBus
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -25,10 +30,6 @@ class MainActivity : AppCompatActivity() {
             openFragment(it ?: return@Observer)
         })
         initViews()
-
-        layout1.layoutDirection = View.LAYOUT_DIRECTION_LTR
-        layout2.layoutDirection = View.LAYOUT_DIRECTION_RTL
-        Log.d(TAG, "${layout1.layoutDirection} ${layout2.layoutDirection}")
     }
 
     override fun onResume() {
@@ -43,6 +44,8 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
+        // 测试 coroutine
+        testCoroutine()
     }
 
     private fun initViews() {

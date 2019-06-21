@@ -30,21 +30,21 @@ class SimpleListFragment: Fragment() {
         recyclerView.adapter = adapter
     }
 
-    private fun getData(): List<String> {
-        val list = ArrayList<String>()
+    private fun getData(): List<Item> {
+        val list = ArrayList<Item>()
         for (i in 0 until 20) {
             val count = (Math.random() * 3 + 7).toInt()
             val array = CharArray(count) {
                 'A' + (Math.random() * 26).toInt()
             }
-            list.add(String(array))
+            list.add(Item(String(array)))
         }
         return list
     }
 }
 
 class SimpleAdapter: RecyclerView.Adapter<SimpleViewHolder>() {
-    val list = ArrayList<String>()
+    val list = ArrayList<Item>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
             = SimpleViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.view_layout_simple_view_holder, parent, false))
@@ -57,17 +57,45 @@ class SimpleAdapter: RecyclerView.Adapter<SimpleViewHolder>() {
     }
 }
 
+const val X_BIAS = 200
+
 class SimpleViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-    var data: String = ""
+    private val originX by lazy { itemView.x }
+    var data: Item? = null
 
     init {
         v.setOnClickListener {
             Toast.makeText(v.context, "click $data", Toast.LENGTH_SHORT).show()
         }
+        v.setOnLongClickListener {
+            data?.let {
+                it.isSelecting = !it.isSelecting
+                bindSelectState()
+                return@setOnLongClickListener true
+            } ?: return@setOnLongClickListener false
+        }
     }
 
-    fun bindData(data: String, index: Int) {
+    fun bindData(data: Item, index: Int) {
         this.data = data
-        itemView.content.text = "$index: $data"
+        itemView.content.text = "$index: ${data?.data}"
+        bindSelectState()
     }
+
+    private fun bindSelectState() {
+        if (data?.isSelecting == true) {
+            itemView.x = originX + X_BIAS.toFloat()
+        } else {
+            itemView.x = originX
+        }
+    }
+}
+
+data class Item(val data: String) {
+    var isSelecting = false
+        set(value) {
+            field = value
+            isSelected = false
+        }
+    var isSelected = false
 }

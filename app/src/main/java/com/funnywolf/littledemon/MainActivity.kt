@@ -7,13 +7,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.funnywolf.littledemon.fragments.*
+import com.funnywolf.littledemon.test.InnerStaticClassTest
 import com.funnywolf.littledemon.test.testCoroutine
 import com.funnywolf.littledemon.utils.LiveDataBus
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -46,6 +49,15 @@ class MainActivity : AppCompatActivity() {
 
         // 测试 coroutine
         testCoroutine()
+
+        // 测试静态内部类的初始化
+        InnerStaticClassTest.doSomethingSelf()
+        Observable.just(0)
+            .delay(1000, TimeUnit.MILLISECONDS)
+            .doOnNext {
+                InnerStaticClassTest.doSomethingWithInnerStaticClass()
+            }
+            .subscribe()
     }
 
     private fun initViews() {
@@ -76,6 +88,10 @@ class MainActivity : AppCompatActivity() {
 
         fragmentViewPager.setOnClickListener {
             fragmentData.postValue(FragmentViewPagerFragment())
+        }
+
+        layoutTest.setOnClickListener {
+            fragmentData.postValue(LayoutTextFragment())
         }
     }
 

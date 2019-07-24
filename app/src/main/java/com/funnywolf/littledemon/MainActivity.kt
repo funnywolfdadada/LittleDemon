@@ -12,10 +12,6 @@ import com.funnywolf.littledemon.test.testCoroutine
 import com.funnywolf.littledemon.utils.LiveDataBus
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -92,6 +88,10 @@ class MainActivity : AppCompatActivity() {
 
         layoutTest.setOnClickListener {
             fragmentData.postValue(LayoutTextFragment())
+        }
+
+        drawerList.setOnClickListener {
+            fragmentData.postValue(DrawerListFragment())
         }
     }
 

@@ -93,6 +93,10 @@ class MainActivity : AppCompatActivity() {
         drawerList.setOnClickListener {
             fragmentData.postValue(DrawerListFragment())
         }
+
+        popupWindowTest.setOnClickListener {
+            fragmentData.postValue(PopupWindowTestFragment())
+        }
     }
 
     private fun openFragment(fragment: Fragment) {

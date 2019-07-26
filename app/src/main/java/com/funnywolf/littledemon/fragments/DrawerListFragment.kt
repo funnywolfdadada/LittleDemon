@@ -1,11 +1,10 @@
 package com.funnywolf.littledemon.fragments
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,11 +12,13 @@ import com.funnywolf.littledemon.R
 import com.funnywolf.littledemon.simpleadapter.Item
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.simpleadapter.SimpleHolderCallback
+import com.funnywolf.littledemon.utils.dp2pix
+import kotlinx.android.synthetic.main.fragment_layout_drawer.*
 
 class DrawerListFragment: Fragment(), SimpleHolderCallback {
-    private lateinit var header: TextView
-    private lateinit var content: View
-    private lateinit var recyclerView: RecyclerView
+    private val recyclerHeight: Int by lazy {
+        page.bottom - header.bottom - dp2pix(context!!, 140)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_layout_drawer, container, false)
@@ -25,16 +26,14 @@ class DrawerListFragment: Fragment(), SimpleHolderCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        header = view.findViewById(R.id.header)
         header.setOnClickListener { clickHeader() }
-        content = view.findViewById(R.id.content)
-        content.setOnClickListener { closeDrawer() }
-        recyclerView = view.findViewById(R.id.recycler_view)
+        recycler_background.setOnClickListener { closeDrawer() }
+        recycler_view.setOnClickListener { closeDrawer() }
 
         val adapter = SimpleAdapter(this)
         adapter.list.addAll(getData())
-        recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        recyclerView.adapter = adapter
+        recycler_view.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        recycler_view.adapter = adapter
     }
 
     private fun getData(): List<Item> {
@@ -59,13 +58,38 @@ class DrawerListFragment: Fragment(), SimpleHolderCallback {
     }
 
     private fun openDrawer() {
-        content.visibility = View.VISIBLE
-        recyclerView.animate().y(0.0f).start()
+        recycler_background.animate().alpha(1.0f).withStartAction {
+            recycler_background.visibility = View.VISIBLE
+        }.start()
+        val animator = ValueAnimator.ofInt(recycler_view.height, recyclerHeight)
+        animator.addUpdateListener {
+            val currentHeight = it.animatedValue as? Int ?: return@addUpdateListener
+            if (currentHeight > 0 && recycler_view.visibility != View.VISIBLE) {
+                recycler_view.visibility = View.VISIBLE
+            }
+            recycler_view.layoutParams.height = if(currentHeight == recyclerHeight) {
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            } else {
+                currentHeight
+            }
+            recycler_view.layoutParams = recycler_view.layoutParams
+        }
+        animator.start()
     }
 
     private fun closeDrawer() {
-        recyclerView.animate().y(-recyclerView.height.toFloat()).withEndAction {
-            content.visibility = View.GONE
-        }.start()
+        recycler_background.animate().alpha(0.0f).withEndAction {
+            recycler_background.visibility = View.GONE
+        }
+        val animator = ValueAnimator.ofInt(recycler_view.height, 0)
+        animator.addUpdateListener {
+            val currentHeight = it.animatedValue as? Int ?: return@addUpdateListener
+            recycler_view.layoutParams.height = currentHeight
+            recycler_view.layoutParams = recycler_view.layoutParams
+            if (currentHeight == 0 && recycler_view.visibility != View.GONE) {
+                recycler_view.visibility = View.GONE
+            }
+        }
+        animator.start()
     }
 }

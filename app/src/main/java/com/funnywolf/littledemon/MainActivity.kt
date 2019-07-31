@@ -2,7 +2,6 @@ package com.funnywolf.littledemon
 
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -94,7 +93,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         layoutTest.setOnClickListener {
-            fragmentData.postValue(LayoutTextFragment())
+            fragmentData.postValue(LayoutTestFragment())
+        }
+
+        foldedText.setOnClickListener {
+            fragmentData.postValue(FoldedTextFragment())
         }
 
         drawerList.setOnClickListener {

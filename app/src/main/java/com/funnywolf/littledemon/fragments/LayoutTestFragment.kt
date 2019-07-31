@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.R
 import kotlinx.android.synthetic.main.test_layout.*
 
-class LayoutTextFragment: Fragment() {
+class LayoutTestFragment: Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.test_layout, container, false)
     }
@@ -26,7 +26,7 @@ class LayoutTextFragment: Fragment() {
                 bottom.visibility = View.GONE
                 bottom.visibility = View.VISIBLE
             }
-            Log.d("LayoutTextFragment", "cost: ${(System.nanoTime() - time) / 1000.0} us")
+            Log.d("LayoutTestFragment", "cost: ${(System.nanoTime() - time) / 1000.0} us")
         }
     }
 }

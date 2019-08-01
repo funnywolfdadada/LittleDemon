@@ -11,6 +11,8 @@ import kotlinx.android.synthetic.main.fragment_layout_folded_text.*
 
 class FoldedTextFragment: Fragment() {
 
+    private var currentText: CharSequence = "哒哒哒哒哒哒哒哒哒哒哒哒哒"
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_layout_folded_text, container, false)
     }
@@ -43,6 +45,18 @@ class FoldedTextFragment: Fragment() {
         """.trimIndent(), true)
         folded_text_view_4.setOnClickListener {
             folded_text_view_4.fold(!folded_text_view_4.isFolded())
+        }
+
+        folded_text_view_dynamic.text = currentText
+        inc.setOnClickListener {
+            currentText = "${currentText}哒"
+            folded_text_view_dynamic.text = currentText
+        }
+        dec.setOnClickListener {
+            if (currentText.isNotEmpty()) {
+                currentText = currentText.subSequence(0, currentText.length - 1)
+                folded_text_view_dynamic.text = currentText
+            }
         }
     }
 }

@@ -3,74 +3,133 @@ package com.funnywolf.littledemon.live
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import java.lang.Exception
 
-typealias Observer<T> = (T) -> Unit
+typealias Observer<T> = (T?) -> Unit
 
 interface LiveObservable<T> {
-    fun observe(observer: Observer<T>, lifecycleOwner: LifecycleOwner? = null)
+    /**
+     * 添加观察者
+     *
+     * @param observer 观察者
+     * @param lifecycleOwner 要感知的生命周期
+     * @param dispatchAtInactive 在非激活状态下是否分发数据，默认不分发
+     */
+    fun addObserver(observer: Observer<T>, lifecycleOwner: LifecycleOwner? = null,
+                dispatchAtInactive: Boolean = false)
+    /**
+     * 移除观察者
+     *
+     * @param observer 观察者
+     */
     fun removeObserver(observer: Observer<T>)
 }
 
 interface MutableLiveObservable<T>: LiveObservable<T> {
-    fun update(data: T)
+    /**
+     * 分发数据
+     *
+     * @param value 新的数据，可空
+     */
+    fun dispatchValue(value: T?)
 }
 
 open class BaseLiveObservable<T>: MutableLiveObservable<T> {
     private val observersMap: MutableMap<Observer<T>, InnerObserver> = HashMap()
 
-    override fun observe(observer: Observer<T>, lifecycleOwner: LifecycleOwner?) {
-        if (lifecycleOwner?.lifecycle?.currentState == Lifecycle.State.DESTROYED) {
+    /**
+     * 是否在主线程更新
+     */
+    open fun updateOnMain(): Boolean = true
+
+    /**
+     * 是否处理异常
+     */
+    open fun handleError(e: Exception): Boolean = true
+
+    override fun addObserver(observer: Observer<T>, lifecycleOwner: LifecycleOwner?, dispatchAtInactive: Boolean) {
+        assertOnMain("BaseLiveObservable.observe")
+        // 如果已经添加，或者已经生命周期结束，就直接退出
+        if (observersMap.containsKey(observer) || isDestroyNonNull(lifecycleOwner)) {
             return
         }
-        val inner = InnerObserver(observer, lifecycleOwner)
-        observersMap[observer] = inner
-        lifecycleOwner?.lifecycle?.addObserver(inner)
+        observersMap[observer] = InnerObserver(observer, lifecycleOwner, dispatchAtInactive)
     }
 
     override fun removeObserver(observer: Observer<T>) {
+        assertOnMain("BaseLiveObservable.removeObserver")
         observersMap.remove(observer)?.also { innerObserver ->
-            innerObserver.lifecycleOwner?.also { owner ->
-                owner.lifecycle.removeObserver(innerObserver)
-            }
+            innerObserver.clear()
         }
     }
 
-    override fun update(data: T) {
-        if (!isOnMain()) {
-            runOnMain { update(data) }
+    override fun dispatchValue(value: T?) {
+        // 如果需要在主线程执行，又不在主线程，就抛到主线程执行
+        if (updateOnMain() && !isOnMain()) {
+            runOnMain { dispatchValue(value) }
             return
         }
+        // 分发
         observersMap.values.forEach {
-            it.dispatchValue(data)
+            try {
+                it.dispatchValue(value)
+            } catch (e: Exception) {
+                // 如果不处理 error 就再次抛出去
+                if (!handleError(e)) {
+                    throw e
+                }
+            }
         }
     }
 
     private inner class InnerObserver(
         val observer: Observer<T>,
-        val lifecycleOwner: LifecycleOwner? = null
+        var lifecycleOwner: LifecycleOwner? = null,
+        val dispatchAtInactive: Boolean
     ): LifecycleEventObserver {
-        private val pendingValues = ArrayList<T>()
+        /**
+         * 保存非激活状态保存的值，并在激活后分发出去
+         */
+        private val pendingValues = ArrayList<T?>()
 
-        fun dispatchValue(data: T) {
-            if (isActive()) {
+        init {
+            // 监听生命周期
+            lifecycleOwner?.lifecycle?.addObserver(this)
+        }
+
+        /**
+         * 更新 value
+         */
+        fun dispatchValue(data: T?) {
+            if (isInactiveNonNull(lifecycleOwner) && !dispatchAtInactive) {
+                // 如果未激活，且不允许在非激活时更新，则把数据暂存起来
+                pendingValues.add(data)
+            } else {
+                // 其他情况直接更新
                 observer.invoke(data)
-                return
             }
-            pendingValues.add(data)
+        }
+
+        /**
+         * 解除生命周期监听，并清空 [pendingValues]
+         */
+        fun clear() {
+            lifecycleOwner?.lifecycle?.removeObserver(this)
+            lifecycleOwner = null
+            pendingValues.clear()
         }
 
         override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-            if (isDestroy()) {
+            if (isDestroyNonNull(lifecycleOwner)) {
+                // 生命周期结束就移除观察者
                 removeObserver(observer)
-            } else if (isActive() && pendingValues.size > 0) {
+            } else if (isActiveOrNull(lifecycleOwner) && pendingValues.size > 0) {
+                // 激活后如果有暂存的 value 就全部分发出去
                 pendingValues.forEach { dispatchValue(it) }
                 pendingValues.clear()
             }
         }
 
-        private fun isActive(): Boolean = (lifecycleOwner == null) || (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
-
-        private fun isDestroy(): Boolean = lifecycleOwner?.lifecycle?.currentState == Lifecycle.State.DESTROYED
     }
 
 }

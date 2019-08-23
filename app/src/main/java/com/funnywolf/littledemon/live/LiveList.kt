@@ -1,119 +1,97 @@
 package com.funnywolf.littledemon.live
 
-data class ListEvent(val type: Int, val from: Int, val len: Int, val to: Int = 0) {
-    companion object {
-        /**
-         * 列表改变
-         */
-        const val ALL_CHANGED = 1
-        /**
-         * 列表某些项改变
-         */
-        const val ITEMS_CHANGED = 2
-        /**
-         * 列表插入某些项
-         */
-        const val ITEMS_INSERTED = 3
-        /**
-         * 列表移除某些项
-         */
-        const val ITEMS_REMOVED = 4
-        /**
-         * 列表某些项移动
-         */
-        const val ITEMS_MOVED = 5
+import androidx.recyclerview.widget.RecyclerView
+import java.lang.ref.WeakReference
 
-        fun allChanged(from: Int, len: Int = 1) = ListEvent(ALL_CHANGED, from, len)
-        fun itemsChanged(from: Int, len: Int = 1) = ListEvent(ITEMS_CHANGED, from, len)
-        fun itemsInserted(from: Int, len: Int = 1) = ListEvent(ITEMS_INSERTED, from, len)
-        fun itemsRemoved(from: Int, len: Int = 1) = ListEvent(ITEMS_REMOVED, from, len)
-        fun itemMoved(from: Int, to: Int) = ListEvent(ITEMS_MOVED, from, 1, to)
-    }
+interface LiveListSource<T> {
+    fun get(): List<T>
+    fun bind(adapter: RecyclerView.Adapter<*>)
+    fun unbind()
 }
 
-class LiveList<T>: BaseLiveObservable<ListEvent>(), MutableList<T> {
+interface MutableListSource<T>: LiveListSource<T> {
+    fun update(func: ((MutableList<T>)->Unit)? = null)
+    fun add(data: T, index: Int? = null)
+    fun addAll(c: Collection<T>, index: Int? = null)
+    fun remove(data: T)
+    fun removeAt(index: Int)
+    fun removeAll(c: Collection<T>)
+    fun set(index: Int, data: T)
+    fun clearAndSet(c: Collection<T>)
+    fun clear()
+}
+
+class LiveList<T>: MutableListSource<T> {
+
     private val rawList: MutableList<T> = ArrayList()
+    private var adapterRef: WeakReference<RecyclerView.Adapter<*>>? = null
 
-    override val size: Int = rawList.size
+    override fun get(): List<T> = rawList
 
-    override fun contains(element: T): Boolean {
-        return rawList.contains(element)
+    override fun bind(adapter: RecyclerView.Adapter<*>) {
+        adapterRef = WeakReference(adapter)
     }
 
-    override fun containsAll(elements: Collection<T>): Boolean {
-        return rawList.containsAll(elements)
+    override fun unbind() {
+        adapterRef?.clear()
+        adapterRef = null
     }
 
-    override fun get(index: Int): T {
-        return rawList[index]
+    override fun update(func: ((MutableList<T>) -> Unit)?) {
+        func?.invoke(rawList)
+        adapterRef?.get()?.notifyDataSetChanged()
     }
 
-    override fun indexOf(element: T): Int {
-        return rawList.indexOf(element)
+    override fun add(data: T, index: Int?) {
+        if (index == null) {
+            rawList.add(data)
+            adapterRef?.get()?.notifyItemInserted(rawList.size - 1)
+        } else {
+            rawList.add(index, data)
+            adapterRef?.get()?.notifyItemInserted(index)
+        }
     }
 
-    override fun isEmpty(): Boolean {
-        return rawList.isEmpty()
+    override fun addAll(c: Collection<T>, index: Int?) {
+        if (index == null) {
+            rawList.addAll(c)
+            adapterRef?.get()?.notifyItemRangeInserted(rawList.size - c.size - 1, c.size)
+        } else {
+            rawList.addAll(index, c)
+            adapterRef?.get()?.notifyItemRangeInserted(index, c.size)
+        }
     }
 
-    override fun iterator(): MutableIterator<T> {
-        return rawList.iterator()
+    override fun remove(data: T) {
+        rawList.removeAt(rawList.indexOf(data))
     }
 
-    override fun lastIndexOf(element: T): Int {
-        return rawList.lastIndexOf(element)
+    override fun removeAt(index: Int) {
+        if (index < 0 || index >= rawList.size) { return }
+        rawList.removeAt(index)
+        adapterRef?.get()?.notifyItemRemoved(index)
     }
 
-    override fun add(element: T): Boolean {
-        return rawList.add(element)
+    override fun removeAll(c: Collection<T>) {
+        rawList.removeAll(c)
+        adapterRef?.get()?.notifyDataSetChanged()
     }
 
-    override fun add(index: Int, element: T) {
-        return rawList.add(index, element)
+    override fun set(index: Int, data: T) {
+        if (index < 0 || index >= rawList.size) { return }
+        rawList[index] = data
+        adapterRef?.get()?.notifyItemChanged(index)
     }
 
-    override fun addAll(index: Int, elements: Collection<T>): Boolean {
-        return rawList.addAll(index, elements)
-    }
-
-    override fun addAll(elements: Collection<T>): Boolean {
-        return rawList.addAll(elements)
+    override fun clearAndSet(c: Collection<T>) {
+        rawList.clear()
+        rawList.addAll(c)
+        adapterRef?.get()?.notifyDataSetChanged()
     }
 
     override fun clear() {
-        return rawList.clear()
-    }
-
-    override fun listIterator(): MutableListIterator<T> {
-        return rawList.listIterator()
-    }
-
-    override fun listIterator(index: Int): MutableListIterator<T> {
-        return rawList.listIterator(index)
-    }
-
-    override fun remove(element: T): Boolean {
-        return rawList.remove(element)
-    }
-
-    override fun removeAll(elements: Collection<T>): Boolean {
-        return rawList.removeAll(elements)
-    }
-
-    override fun removeAt(index: Int): T {
-        return rawList.removeAt(index)
-    }
-
-    override fun retainAll(elements: Collection<T>): Boolean {
-        return rawList.retainAll(elements)
-    }
-
-    override fun set(index: Int, element: T): T {
-        return rawList.set(index, element)
-    }
-
-    override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> {
-        return rawList.subList(fromIndex, toIndex)
+        rawList.clear()
+        adapterRef?.get()?.notifyDataSetChanged()
     }
 
 }

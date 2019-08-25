@@ -1,116 +1,153 @@
 package com.funnywolf.littledemon.tmp
 
-import android.content.Context
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
-import java.lang.Exception
 
 class SimpleAdapter(
     val list: List<*>,
     /**
-     * key 是数据的 [Class.hashCode]，value 是支持对应数据类的 [HolderInfo] 的列表
+     * key 是数据的 [Class]，value 是支持对应数据类的 [HolderInfo] 的列表
      */
-    private val holderListArray: SparseArray<List<HolderInfo<Any>>?>,
+    private val holderListMap: Map<Class<*>, List<HolderInfo<*>>>,
 
     /**
-     * key 是 [HolderInfo.holderClass] 的 hashCode，value 是支持对应的 [HolderInfo]
+     * key 是 [HolderInfo] 的 [Class.hashCode]，value 是支持对应的 [HolderInfo]
      */
-    private val holderArray: SparseArray<HolderInfo<Any>?>
-): RecyclerView.Adapter<BaseSimpleHolder<Any>>() {
+    private val holderArray: SparseArray<HolderInfo<*>?>
+): RecyclerView.Adapter<SimpleHolder<Any>>() {
+
+    var dispatcher: ((Any) -> HolderInfo<Any>?)? = null
+    var onCreateViewHolderListener: ((SimpleHolder<Any>)->Unit)? = null
+    var onBindViewHolderListener: ((SimpleHolder<Any>)->Unit)? = null
 
     /**
-     * 对应 [HolderInfo.holderClass] 的 hashCode 作为 View Type
+     * 对应 [HolderInfo] 的 [Class.hashCode] 作为 View Type
      *
      * @param position 数据下标
-     * @return 支持对应数据的 [HolderInfo.holderClass] 的 hashCode，数据为 null 或找不到就返回 0
+     * @return 支持对应数据的 [HolderInfo] 的 [Class.hashCode]，数据为 null 或找不到就返回 0
      */
     override fun getItemViewType(position: Int): Int {
-        val data = list[position] ?: return 0
-        val dataClass = data.javaClass
-        return holderListArray[dataClass.hashCode()]
-            ?.firstOrNull { it.isThisOne?.invoke(data) != false }
-            ?.holderClass
-            .hashCode()
+        return getHolderInfo(list[position] ?: return 0).hashCode()
     }
 
-    /**
-     * 创建 ViewHolder，
-     *
-     * @param parent 父 [View]
-     * @param viewType [HolderInfo.holderClass] 的 hashCode，0 表示数据为 null 或不支持
-     * @return 对应 [HolderInfo.holderClass] 的实例
-     */
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseSimpleHolder<Any> {
-        val holderInfo = holderArray[viewType]
-        if (viewType <= 0 || holderInfo == null) {
-            return NullHolder(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleHolder<Any> {
+        val holderInfo = (holderArray[viewType] as? HolderInfo<Any>) ?: HolderInfo.EMPTY
+        val view = if (holderInfo != HolderInfo.EMPTY) {
+            LayoutInflater.from(parent.context).inflate(holderInfo.layoutRes, parent, false)
+        } else {
+            View(parent.context)
         }
-        return try {
-            val view = LayoutInflater.from(parent.context).inflate(holderInfo.layoutRes, parent, false)
-            val holder = holderInfo.holderClass.getConstructor(View::class.java).newInstance(view)
-
-            holder
-        } catch (e: Exception) {
-            NullHolder(parent.context)
-        }
+        val holder = SimpleHolder(view, holderInfo)
+        onCreateViewHolderListener?.invoke(holder)
+        return holder
     }
 
     override fun getItemCount(): Int {
         return list.size
     }
 
-    override fun onBindViewHolder(holder: BaseSimpleHolder<Any>, position: Int) {
-        list[position]?.also {
-            holder.onBindDataInternal(it)
+    override fun onBindViewHolder(holder: SimpleHolder<Any>, position: Int) {
+        val data = list[position]
+        if (data != null) {
+            holder.onBindViewHolder(data)
+            onBindViewHolderListener?.invoke(holder)
         }
+    }
+
+    private fun getHolderInfo(data: Any): HolderInfo<*>? {
+        // 拿到对应的 HolderInfo 列表，没有就返回 null
+        val holderList = getHolderList(data.javaClass) ?: return null
+        // dispatcher 不存在，或不支持，就返回 holderList 第一个
+        val dispatchedHolder = dispatcher?.invoke(data) ?: return holderList.firstOrNull()
+        // dispatchedHolder 注册过就直接返回，否则返回 null
+        return if (holderList.contains(dispatchedHolder)) {
+            dispatchedHolder
+        } else {
+            null
+        }
+    }
+
+    private fun getHolderList(dataClass: Class<Any>): List<HolderInfo<*>>? {
+        return holderListMap[dataClass]
+            ?: holderListMap.keys.firstOrNull {
+                it.isAssignableFrom(dataClass)
+            }?.let {
+                holderListMap[it]
+            }
+    }
+
+    class Builder(private val list: List<*>) {
+        private val holderListMap = HashMap<Class<out Any>, MutableList<HolderInfo<out Any>>>()
+        private val holderArray = SparseArray<HolderInfo<out Any>?>()
+
+        fun <T: Any> add(holderInfo: HolderInfo<T>): Builder {
+            val list = holderListMap[holderInfo.dataClass]
+                ?: ArrayList<HolderInfo<out Any>>().also {
+                    holderListMap[holderInfo.dataClass] = it
+                }
+            list.add(holderInfo)
+            holderArray.append(holderInfo.javaClass.hashCode(), holderInfo)
+            return this
+        }
+
+        fun build(): SimpleAdapter {
+            return SimpleAdapter(list, holderListMap, holderArray)
+        }
+    }
+}
+
+class SimpleHolder<T: Any>(v: View, private val holderInfo: HolderInfo<T>) : RecyclerView.ViewHolder(v) {
+
+    /**
+     * 只能在 [onBindViewHolder] 里面和之后调用
+     */
+    lateinit var currentData: T
+
+    init {
+        holderInfo.onCreateViewHolder(this)
+    }
+
+    fun onBindViewHolder(data: T) {
+        currentData = data
+        holderInfo.onBindViewHolder(this)
     }
 
 }
 
-interface HolderListener {
-    fun onCreateViewHolder(holder: BaseSimpleHolder<*>)
-}
-
-data class HolderInfo<T: Any>(
+open class HolderInfo<T: Any> (
     /**
      * 数据类型
      */
     val dataClass: Class<T>,
-    /**
-     * 对应 [BaseSimpleHolder] 的类型
-     */
-    val holderClass: Class<out BaseSimpleHolder<T>>,
+
     /**
      * 布局文件
      */
     @LayoutRes val layoutRes: Int,
+
     /**
-     * 是否支持该数据
+     * 创建
      */
-    val isThisOne: ((T) -> Boolean)?
-)
+    private val onCreateViewHolder: ((SimpleHolder<T>)->Unit)? = null,
 
-
-
-abstract class BaseSimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
     /**
-     * 只能在 [onBindData] 里面和之后调用
+     * 绑定
      */
-    lateinit var currentData: T
-    fun onBindDataInternal(data: T) {
-        currentData = data
-        try {
-            onBindData(data)
-        } catch (e: Exception) {
-        }
+    private val onBindViewHolder: ((SimpleHolder<T>)->Unit)? = null
+) {
+    open fun onCreateViewHolder(holder: SimpleHolder<T>) {
+        onCreateViewHolder?.invoke(holder)
     }
-    abstract fun onBindData(data: T)
-}
 
-class NullHolder(context: Context): BaseSimpleHolder<Any>(View(context)) {
-    override fun onBindData(data: Any) {}
+    open fun onBindViewHolder(holder: SimpleHolder<T>) {
+        onBindViewHolder?.invoke(holder)
+    }
+
+    companion object {
+        val EMPTY = HolderInfo(Any::class.java, 0)
+    }
 }

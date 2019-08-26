@@ -9,13 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.Item
+import com.funnywolf.littledemon.simpleadapter.HolderInfo
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
-import com.funnywolf.littledemon.simpleadapter.SimpleHolderCallback
+import com.funnywolf.littledemon.simpleadapter.SimpleHolder
 import com.funnywolf.littledemon.utils.dp2pix
 import kotlinx.android.synthetic.main.fragment_layout_drawer.*
 
-class DrawerListFragment: Fragment(), SimpleHolderCallback {
+class DrawerListFragment: Fragment() {
     private val recyclerHeight: Int by lazy {
         page.bottom - header.bottom - dp2pix(context!!, 140)
     }
@@ -30,27 +30,29 @@ class DrawerListFragment: Fragment(), SimpleHolderCallback {
         recycler_background.setOnClickListener { closeDrawer() }
         recycler_view.setOnClickListener { closeDrawer() }
 
-        val adapter = SimpleAdapter(this)
-        adapter.list.addAll(getData())
+        val adapter = SimpleAdapter.Builder(getData())
+            .add(object: HolderInfo<String>(String::class.java, R.layout.view_layout_simple_view_holder) {
+                override fun onCreateViewHolder(holder: SimpleHolder<String>) {
+                    holder.itemView.setOnClickListener {
+                        closeDrawer()
+                        header.text = holder.currentData
+                    }
+                }
+            }).build()
         recycler_view.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         recycler_view.adapter = adapter
     }
 
-    private fun getData(): List<Item> {
-        val list = ArrayList<Item>()
+    private fun getData(): List<String> {
+        val list = ArrayList<String>()
         for (i in 0 until 20) {
             val count = (Math.random() * 3 + 7).toInt()
             val array = CharArray(count) {
                 'A' + (Math.random() * 26).toInt()
             }
-            list.add(Item(String(array)))
+            list.add(String(array))
         }
         return list
-    }
-
-    override fun onClick(item: Item) {
-        closeDrawer()
-        header.text = item.data
     }
 
     private fun clickHeader() {

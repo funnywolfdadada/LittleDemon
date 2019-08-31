@@ -101,6 +101,7 @@ class SimpleAdapter(
 }
 
 class SimpleHolder<T: Any>(v: View, private val holderInfo: HolderInfo<T>) : RecyclerView.ViewHolder(v) {
+    private val viewArray = SparseArray<View>()
 
     /**
      * 只能在 [onBindViewHolder] 里面和之后调用
@@ -116,8 +117,23 @@ class SimpleHolder<T: Any>(v: View, private val holderInfo: HolderInfo<T>) : Rec
         holderInfo.onBindViewHolder(this)
     }
 
+    inline fun <reified V> getView(id: Int): V {
+        return getView(id) as V
+    }
+
+    fun getView(id: Int): View? {
+        return viewArray.get(id) ?: itemView.findViewById<View>(id).also {
+            viewArray.put(id, it)
+        }
+    }
+
 }
 
+/**
+ * 该类属于 [RecyclerView.ViewHolder] 的配置类，一个实例对应多个 ViewHolder，所以 [onCreateViewHolder]
+ * 和 [onBindViewHolder] 会传入不同的 ViewHolder。同样的，继承该类的话，不要再类里面缓存某一个 ViewHolder
+ * 实例的数据，对应 [View] 的缓存可以通过 [SimpleHolder.getView] 获取
+ */
 open class HolderInfo<T: Any> (
     /**
      * 数据类型

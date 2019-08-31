@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -37,6 +38,10 @@ class DrawerListFragment: Fragment() {
                         closeDrawer()
                         header.text = holder.currentData
                     }
+                }
+
+                override fun onBindViewHolder(holder: SimpleHolder<String>) {
+                    holder.getView<TextView>(R.id.content).text = holder.currentData
                 }
             }).build()
         recycler_view.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,12 +14,7 @@ import com.funnywolf.littledemon.simpleadapter.HolderInfo
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.simpleadapter.SimpleHolder
 import kotlinx.android.synthetic.main.fragment_layout_simple_list.*
-import kotlinx.android.synthetic.main.view_layout_simple_view_holder.view.*
 
-/**
- * @author zhaodongliang @ Zhihu Inc.
- * @since 2019/4/10
- */
 class SimpleListFragment: Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -35,7 +31,7 @@ class SimpleListFragment: Fragment() {
             }
 
             override fun onBindViewHolder(holder: SimpleHolder<String>) {
-                holder.itemView.content.text = holder.currentData
+                holder.getView<TextView>(R.id.content).text = holder.currentData
             }
         }
         val adapter = SimpleAdapter.Builder(getData())

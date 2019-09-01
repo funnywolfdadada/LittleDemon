@@ -32,6 +32,7 @@ class HostFragment: Fragment() {
         bind(foldedText, FoldedTextFragment::class.java)
         bind(drawerList, DrawerListFragment::class.java)
         bind(popupWindowTest, PopupWindowTestFragment::class.java)
+        bind(motionLayout, MotionLayoutTestFragment::class.java)
     }
 
     private fun bind(v: View, fragmentClass: Class<out Fragment>) {

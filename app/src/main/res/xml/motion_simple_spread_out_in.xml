@@ -70,41 +70,57 @@
             app:duration="300">
 
         <KeyFrameSet>
+
             <KeyPosition app:motionTarget="@id/sun_left"
                     app:framePosition="25"
                     app:keyPositionType="parentRelative"
-                    app:percentX="0.15"/>
-            <KeyPosition app:motionTarget="@id/sun_right"
-                    app:framePosition="25"
-                    app:keyPositionType="parentRelative"
-                    app:percentX="0.85"/>
-
+                    app:percentX="0.25"
+                    app:percentY="0.2"/>
             <KeyPosition app:motionTarget="@id/sun_left"
                     app:framePosition="50"
                     app:keyPositionType="parentRelative"
                     app:percentX="0"/>
-            <KeyPosition app:motionTarget="@id/sun_right"
-                    app:framePosition="50"
-                    app:keyPositionType="parentRelative"
-                    app:percentX="1"/>
-
             <KeyPosition app:motionTarget="@id/sun_left"
                     app:framePosition="75"
                     app:keyPositionType="parentRelative"
-                    app:percentX="0.15"/>
-            <KeyPosition app:motionTarget="@id/sun_right"
-                    app:framePosition="75"
-                    app:keyPositionType="parentRelative"
-                    app:percentX="0.85"/>
+                    app:percentX="0.25"
+                    app:percentY="0.8"/>
 
             <KeyAttribute app:motionTarget="@id/sun_left"
                     app:framePosition="50"
                     android:rotation="360"
                     android:alpha="1"/>
+
+            <KeyPosition app:motionTarget="@id/sun_right"
+                    app:framePosition="25"
+                    app:keyPositionType="parentRelative"
+                    app:percentX="0.9"/>
+            <KeyPosition app:motionTarget="@id/sun_right"
+                    app:framePosition="50"
+                    app:keyPositionType="parentRelative"
+                    app:percentX="1"/>
+            <KeyPosition app:motionTarget="@id/sun_right"
+                    app:framePosition="75"
+                    app:keyPositionType="parentRelative"
+                    app:percentX="0.9"/>
+
             <KeyAttribute app:motionTarget="@id/sun_right"
                     app:framePosition="50"
                     android:rotation="-360"
                     android:alpha="1"/>
+
+            <KeyAttribute app:motionTarget="@id/sun"
+                    app:framePosition="0"
+                    android:scaleX="1"
+                    android:scaleY="1"/>
+            <KeyAttribute app:motionTarget="@id/sun"
+                    app:framePosition="50"
+                    android:scaleX="2"
+                    android:scaleY="2"/>
+            <KeyAttribute app:motionTarget="@id/sun"
+                    app:framePosition="100"
+                    android:scaleX="1"
+                    android:scaleY="1"/>
         </KeyFrameSet>
 
         <OnSwipe app:touchAnchorId="@id/sun" />

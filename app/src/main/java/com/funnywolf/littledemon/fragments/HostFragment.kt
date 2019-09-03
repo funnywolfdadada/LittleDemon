@@ -11,6 +11,11 @@ import kotlinx.android.synthetic.main.fragment_layout_host.*
 
 class HostFragment: Fragment() {
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        MainActivity.startFragment(MotionLayoutTestFragment::class.java)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_layout_host, container, false)
     }

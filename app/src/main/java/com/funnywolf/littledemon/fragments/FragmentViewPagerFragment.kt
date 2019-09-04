@@ -1,7 +1,9 @@
 package com.funnywolf.littledemon.fragments
 
+import android.animation.FloatEvaluator
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,14 +14,11 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.funnywolf.littledemon.R
 import com.funnywolf.littledemon.utils.getScreenHeight
+import com.google.android.material.animation.ArgbEvaluatorCompat
 import kotlinx.android.synthetic.main.fragment_layout_fragment_view_pager.*
 
-/**
- * @author zhaodongliang @ Zhihu Inc.
- * @since 2019/4/10
- */
 class FragmentViewPagerFragment: Fragment(), ViewPager.OnPageChangeListener {
-    private var tabs: Array<TextView>? = null
+    private lateinit var tabs: Array<TextView>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_layout_fragment_view_pager, container, false)
@@ -28,19 +27,26 @@ class FragmentViewPagerFragment: Fragment(), ViewPager.OnPageChangeListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.layoutParams.height = getScreenHeight(context ?: return)
-        viewPager.adapter = PagerAdapter(getFragments(), fragmentManager ?: return)
+        viewPager.adapter = PagerAdapter(listOf(SimpleListFragment(), SimpleListFragment(), SimpleListFragment()),
+            childFragmentManager)
         viewPager.addOnPageChangeListener(this)
         tabs = arrayOf(tab1, tab2, tab3)
-        repeat(tabs?.count() ?: return) { index ->
-            tabs!![index].setOnClickListener {
+        repeat(tabs.count()) { index ->
+            tabs[index].setOnClickListener {
                 viewPager.currentItem = index
             }
+            tabs[index].alpha = if (index == viewPager.currentItem) {
+                getAlphaByProgress(1F)
+            } else {
+                getAlphaByProgress(0F)
+            }
+            tabs[index].setTextColor(if (index == viewPager.currentItem) {
+                getColorByProgress(1F)
+            } else {
+                getColorByProgress(0F)
+            })
         }
         onPageSelected(viewPager.currentItem)
-    }
-
-    private fun getFragments(): List<Fragment> {
-        return listOf(SimpleListFragment(), SimpleListFragment(), SimpleListFragment())
     }
 
     override fun onPageScrollStateChanged(state: Int) {
@@ -48,26 +54,29 @@ class FragmentViewPagerFragment: Fragment(), ViewPager.OnPageChangeListener {
     }
 
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-
+        Log.d("ZDL", "position = ${position + positionOffset}")
+        tabs[position].alpha = getAlphaByProgress(1 - positionOffset)
+        tabs[position].setTextColor(getColorByProgress(1 - positionOffset))
+        if (position < tabs.size - 1) {
+            tabs[position + 1].alpha = getAlphaByProgress(positionOffset)
+            tabs[position + 1].setTextColor(getColorByProgress(positionOffset))
+        }
     }
 
     override fun onPageSelected(position: Int) {
-        repeat(tabs?.count() ?: return) {
-            if (it == position) {
-                tabs!![it].setTextColor(Color.GREEN)
-            } else {
-                tabs!![it].setTextColor(Color.WHITE)
-            }
-        }
+    }
+
+    private val floatEvaluator = FloatEvaluator()
+    private fun getAlphaByProgress(progress: Float, minAlpha: Float = 0.5F, maxAlpha: Float = 1F): Float {
+        return floatEvaluator.evaluate(progress, minAlpha, maxAlpha)
+    }
+
+    private fun getColorByProgress(progress: Float, startColor: Int = Color.WHITE, endColor: Int = Color.GREEN): Int {
+        return ArgbEvaluatorCompat.getInstance().evaluate(progress, startColor, endColor)
     }
 }
 
-class PagerAdapter(list: List<Fragment>, fm: FragmentManager): FragmentPagerAdapter(fm) {
-    private val list = ArrayList<Fragment>()
-
-    init {
-        this.list.addAll(list)
-    }
+class PagerAdapter(private val list: List<Fragment>, fm: FragmentManager): FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     override fun getItem(position: Int) = list[position]
 

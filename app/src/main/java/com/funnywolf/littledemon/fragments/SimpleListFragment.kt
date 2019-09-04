@@ -10,9 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.HolderInfo
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
-import com.funnywolf.littledemon.simpleadapter.SimpleHolder
 import kotlinx.android.synthetic.main.fragment_layout_simple_list.*
 
 class SimpleListFragment: Fragment() {
@@ -23,20 +21,15 @@ class SimpleListFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val holderInfo = object: HolderInfo<String>(String::class.java, R.layout.view_layout_simple_view_holder) {
-            override fun onCreateViewHolder(holder: SimpleHolder<String>) {
-                holder.itemView.setOnClickListener {
-                    Toast.makeText(this@SimpleListFragment.context, "Clicked ${holder.currentData}", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onBindViewHolder(holder: SimpleHolder<String>) {
-                holder.getView<TextView>(R.id.content).text = holder.currentData
-            }
-        }
         val adapter = SimpleAdapter.Builder(getData())
-            .add(holderInfo)
-            .build()
+            .add(SimpleAdapter.HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder, { holder ->
+                    holder.itemView.setOnClickListener {
+                        Toast.makeText(this@SimpleListFragment.context, "Clicked ${holder.currentData}", Toast.LENGTH_SHORT).show()
+                    }
+                }, { holder ->
+                    holder.getView<TextView>(R.id.content).text = holder.currentData
+                })
+            ).build()
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
     }

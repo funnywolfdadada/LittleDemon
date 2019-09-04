@@ -10,9 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.HolderInfo
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
-import com.funnywolf.littledemon.simpleadapter.SimpleHolder
 import com.funnywolf.littledemon.utils.dp2pix
 import kotlinx.android.synthetic.main.fragment_layout_drawer.*
 
@@ -32,18 +30,15 @@ class DrawerListFragment: Fragment() {
         recycler_view.setOnClickListener { closeDrawer() }
 
         val adapter = SimpleAdapter.Builder(getData())
-            .add(object: HolderInfo<String>(String::class.java, R.layout.view_layout_simple_view_holder) {
-                override fun onCreateViewHolder(holder: SimpleHolder<String>) {
+            .add(SimpleAdapter.HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder, { holder ->
                     holder.itemView.setOnClickListener {
                         closeDrawer()
                         header.text = holder.currentData
                     }
-                }
-
-                override fun onBindViewHolder(holder: SimpleHolder<String>) {
+                }, { holder ->
                     holder.getView<TextView>(R.id.content).text = holder.currentData
-                }
-            }).build()
+                })
+            ).build()
         recycler_view.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         recycler_view.adapter = adapter
     }

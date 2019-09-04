@@ -12,26 +12,26 @@ class SimpleAdapter(
     /**
      * key 是数据的 [Class]，value 是支持对应数据类的 [HolderInfo] 的列表
      */
-    private val holderListMap: Map<Class<*>, List<HolderInfo<*>>>,
+    private val holderListMap: Map<Class<out Any>, List<HolderInfo<out Any>>>,
 
     /**
-     * key 是 [HolderInfo.hashCode]，value 是支持对应的 [HolderInfo]
+     * key 是 [HolderInfo.layoutRes]，value 是支持对应的 [HolderInfo]
      */
-    private val holderArray: SparseArray<HolderInfo<*>?>
-): RecyclerView.Adapter<SimpleHolder<Any>>() {
+    private val holderArray: SparseArray<HolderInfo<out Any>?>
+): RecyclerView.Adapter<SimpleAdapter.SimpleHolder<Any>>() {
 
     var dispatcher: ((Any) -> HolderInfo<Any>?)? = null
     var onCreateViewHolderListener: ((SimpleHolder<Any>)->Unit)? = null
     var onBindViewHolderListener: ((SimpleHolder<Any>)->Unit)? = null
 
     /**
-     * 对应 [HolderInfo.hashCode] 作为 View Type
+     * 对应 [HolderInfo.layoutRes] 作为 View Type
      *
      * @param position 数据下标
-     * @return 支持对应数据的 [HolderInfo.hashCode]，数据为 null 或找不到就返回 0
+     * @return 支持对应数据的 [HolderInfo.layoutRes]，数据为 null 或找不到就返回 0
      */
     override fun getItemViewType(position: Int): Int {
-        return getHolderInfo(list[position] ?: return 0).hashCode()
+        return getHolderInfo(list[position] ?: return 0)?.layoutRes ?: 0
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleHolder<Any> {
@@ -90,7 +90,7 @@ class SimpleAdapter(
                     holderListMap[holderInfo.dataClass] = it
                 }
             list.add(holderInfo)
-            holderArray.append(holderInfo.hashCode(), holderInfo)
+            holderArray.append(holderInfo.layoutRes, holderInfo)
             return this
         }
 
@@ -98,60 +98,73 @@ class SimpleAdapter(
             return SimpleAdapter(list, holderListMap, holderArray)
         }
     }
-}
 
-class SimpleHolder<T: Any>(v: View, private val holderInfo: HolderInfo<T>) : RecyclerView.ViewHolder(v) {
-    private val viewArray = SparseArray<View>()
+    class SimpleHolder<T: Any>(v: View, private val holderInfo: HolderInfo<T>) : RecyclerView.ViewHolder(v) {
+        private val viewArray = SparseArray<View>()
+
+        /**
+         * 只能在 [onBindViewHolder] 里面和之后调用
+         */
+        lateinit var currentData: T
+
+        init {
+            holderInfo.onCreateViewHolder(this)
+        }
+
+        fun onBindViewHolder(data: T) {
+            currentData = data
+            holderInfo.onBindViewHolder(this)
+        }
+
+        inline fun <reified V> getView(id: Int): V {
+            return getView(id) as V
+        }
+
+        fun getView(id: Int): View? {
+            return viewArray.get(id) ?: itemView.findViewById<View>(id).also {
+                viewArray.put(id, it)
+            }
+        }
+
+    }
 
     /**
-     * 只能在 [onBindViewHolder] 里面和之后调用
+     * 该类属于 [RecyclerView.ViewHolder] 的配置类，一个实例对应多个 ViewHolder，所以 [onCreateViewHolder]
+     * 和 [onBindViewHolder] 会传入不同的 ViewHolder。同样的，继承该类的话，不要再类里面缓存某一个 ViewHolder
+     * 实例的数据，对应 [View] 的缓存可以通过 [SimpleHolder.getView] 获取
      */
-    lateinit var currentData: T
+    open class HolderInfo<T: Any> (
+        /**
+         * 数据类型
+         */
+        val dataClass: Class<T>,
 
-    init {
-        holderInfo.onCreateViewHolder(this)
-    }
+        /**
+         * 布局文件
+         */
+        @LayoutRes val layoutRes: Int,
 
-    fun onBindViewHolder(data: T) {
-        currentData = data
-        holderInfo.onBindViewHolder(this)
-    }
+        /**
+         * create 时的回调
+         */
+        private val onCreateViewHolder: ((SimpleHolder<T>)->Unit)? = null,
 
-    inline fun <reified V> getView(id: Int): V {
-        return getView(id) as V
-    }
+        /**
+         * bind 时的回调
+         */
+        private val onBindViewHolder: ((SimpleHolder<T>)->Unit)? = null
+    ) {
+        open fun onCreateViewHolder(holder: SimpleHolder<T>) {
+            onCreateViewHolder?.invoke(holder)
+        }
 
-    fun getView(id: Int): View? {
-        return viewArray.get(id) ?: itemView.findViewById<View>(id).also {
-            viewArray.put(id, it)
+        open fun onBindViewHolder(holder: SimpleHolder<T>) {
+            onBindViewHolder?.invoke(holder)
+        }
+
+        companion object {
+            val EMPTY = HolderInfo(Any::class.java, 0)
         }
     }
 
-}
-
-/**
- * 该类属于 [RecyclerView.ViewHolder] 的配置类，一个实例对应多个 ViewHolder，所以 [onCreateViewHolder]
- * 和 [onBindViewHolder] 会传入不同的 ViewHolder。同样的，继承该类的话，不要再类里面缓存某一个 ViewHolder
- * 实例的数据，对应 [View] 的缓存可以通过 [SimpleHolder.getView] 获取
- */
-open class HolderInfo<T: Any> (
-    /**
-     * 数据类型
-     */
-    val dataClass: Class<T>,
-
-    /**
-     * 布局文件
-     */
-    @LayoutRes val layoutRes: Int
-) {
-    open fun onCreateViewHolder(holder: SimpleHolder<T>) {
-    }
-
-    open fun onBindViewHolder(holder: SimpleHolder<T>) {
-    }
-
-    companion object {
-        val EMPTY = HolderInfo(Any::class.java, 0)
-    }
 }

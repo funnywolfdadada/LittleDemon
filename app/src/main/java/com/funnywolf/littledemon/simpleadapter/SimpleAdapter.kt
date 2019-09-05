@@ -6,6 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class SimpleAdapter(
     val list: List<*>,
@@ -15,7 +18,7 @@ class SimpleAdapter(
     private val holderListMap: Map<Class<out Any>, List<HolderInfo<out Any>>>,
 
     /**
-     * key 是 [HolderInfo.layoutRes]，value 是支持对应的 [HolderInfo]
+     * key 是 [SimpleAdapter.viewType]，value 是对应支持的 [HolderInfo]
      */
     private val holderArray: SparseArray<HolderInfo<out Any>?>
 ): RecyclerView.Adapter<SimpleAdapter.SimpleHolder<Any>>() {
@@ -25,13 +28,13 @@ class SimpleAdapter(
     var onBindViewHolderListener: ((SimpleHolder<Any>)->Unit)? = null
 
     /**
-     * 对应 [HolderInfo.layoutRes] 作为 View Type
+     * 对应 [SimpleAdapter.viewType] 作为 View Type
      *
      * @param position 数据下标
-     * @return 支持对应数据的 [HolderInfo.layoutRes]，数据为 null 或找不到就返回 0
+     * @return 支持对应数据的 [SimpleAdapter.viewType]，数据为 null 或找不到就返回 0
      */
     override fun getItemViewType(position: Int): Int {
-        return getHolderInfo(list[position] ?: return 0)?.layoutRes ?: 0
+        return viewType(getHolderInfo(list[position] ?: return 0))
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleHolder<Any> {
@@ -80,6 +83,19 @@ class SimpleAdapter(
             }
     }
 
+    companion object {
+
+        fun viewType(layoutRes: Int, dataClass: Class<*>): Int {
+            return Objects.hash(layoutRes, dataClass)
+        }
+
+        fun viewType(holderInfo: HolderInfo<*>?): Int {
+            holderInfo ?: return 0
+            return viewType(holderInfo.layoutRes, holderInfo.dataClass)
+        }
+
+    }
+
     class Builder(private val list: List<*>) {
         private val holderListMap = HashMap<Class<out Any>, MutableList<HolderInfo<out Any>>>()
         private val holderArray = SparseArray<HolderInfo<out Any>?>()
@@ -90,7 +106,7 @@ class SimpleAdapter(
                     holderListMap[holderInfo.dataClass] = it
                 }
             list.add(holderInfo)
-            holderArray.append(holderInfo.layoutRes, holderInfo)
+            holderArray.append(viewType(holderInfo), holderInfo)
             return this
         }
 

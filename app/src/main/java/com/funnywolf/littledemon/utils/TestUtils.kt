@@ -4,6 +4,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.funnywolf.littledemon.R
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
+import kotlin.random.Random
 
 fun createSimpleStringHolderInfo(): SimpleAdapter.HolderInfo<String> {
     return SimpleAdapter.HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder, { holder ->
@@ -16,8 +17,7 @@ fun createSimpleStringHolderInfo(): SimpleAdapter.HolderInfo<String> {
 }
 
 fun getRandomStrings(n: Int, prefixIndex: Boolean = true, prefix: String = "", suffix: String = "", size: Int = 0): MutableList<String> {
-    val list = ArrayList<String>()
-    repeat(n) {
+    return MutableList(n) {
         val count = if (size <= 0) {
             (Math.random() * 3 + 7).toInt()
         } else {
@@ -31,7 +31,12 @@ fun getRandomStrings(n: Int, prefixIndex: Boolean = true, prefix: String = "", s
         } else {
             ""
         }
-        list.add("$index $prefix ${String(array)} $suffix")
+        "$index $prefix ${String(array)} $suffix"
     }
-    return list
+}
+
+fun getRandomInt(n: Int, start: Int = 0, end: Int = Int.MAX_VALUE): MutableList<Int> {
+    return MutableList(n) {
+        Random.nextInt(start, end)
+    }
 }

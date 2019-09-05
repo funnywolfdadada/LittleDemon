@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:background="#FFFF"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <ImageView
+            android:id="@+id/collapseHeaderImage"
+            android:src="@mipmap/bg1"
+            android:minHeight="50dp"
+            android:scaleType="centerCrop"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/coordinator_layout_test_header_height" />
+
+    <TextView
+            android:id="@+id/text"
+            android:layout_margin="10dp"
+            android:paddingStart="10dp"
+            android:text="哒哒哒哒哒"
+            android:background="#F000"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            app:layout_behavior=".fragments.HeaderCollapseBehavior"
+            app:layout_anchorGravity="bottom"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -16,22 +16,19 @@ fun createSimpleStringHolderInfo(): SimpleAdapter.HolderInfo<String> {
     })
 }
 
+fun getRandomString(length: Int = (Math.random() * 3 + 7).toInt()): String {
+    return String(CharArray(length) {
+        'A' + (Math.random() * 26).toInt()
+    })
+}
+
 fun getRandomStrings(n: Int, prefixIndex: Boolean = true, prefix: String = "", suffix: String = "", size: Int = 0): MutableList<String> {
     return MutableList(n) {
-        val count = if (size <= 0) {
-            (Math.random() * 3 + 7).toInt()
-        } else {
-            size
-        }
-        val array = CharArray(count) {
-            'A' + (Math.random() * 26).toInt()
-        }
-        val index = if (prefixIndex) {
-            "$it:"
-        } else {
-            ""
-        }
-        "$index $prefix ${String(array)} $suffix"
+        "${
+            if (prefixIndex) { "$it:" } else { "" }
+        }$prefix${
+            getRandomString(if (size <= 0) { (Math.random() * 3 + 7).toInt() } else { size })
+        }$suffix"
     }
 }
 

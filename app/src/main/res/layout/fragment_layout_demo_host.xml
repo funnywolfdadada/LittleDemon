@@ -10,6 +10,7 @@
 
         <Button
                 android:id="@+id/listDemo"
+                android:text="List Demo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 

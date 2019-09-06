@@ -5,12 +5,13 @@ import java.lang.ref.WeakReference
 
 interface LiveListSource<T> {
     fun get(): List<T>
-    fun bind(adapter: RecyclerView.Adapter<*>)
+    fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>)
     fun unbind()
 }
 
 interface MutableListSource<T>: LiveListSource<T> {
     fun update(func: ((MutableList<T>)->Unit)? = null)
+    fun update(index: Int, func: ((T)->Unit)? = null)
     fun add(data: T, index: Int? = null)
     fun addAll(c: Collection<T>, index: Int? = null)
     fun remove(data: T)
@@ -24,11 +25,11 @@ interface MutableListSource<T>: LiveListSource<T> {
 class LiveList<T>: MutableListSource<T> {
 
     private val rawList: MutableList<T> = ArrayList()
-    private var adapterRef: WeakReference<RecyclerView.Adapter<*>>? = null
+    private var adapterRef: WeakReference<RecyclerView.Adapter<out RecyclerView.ViewHolder>>? = null
 
     override fun get(): List<T> = rawList
 
-    override fun bind(adapter: RecyclerView.Adapter<*>) {
+    override fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) {
         adapterRef = WeakReference(adapter)
     }
 
@@ -42,11 +43,18 @@ class LiveList<T>: MutableListSource<T> {
         adapterRef?.get()?.notifyDataSetChanged()
     }
 
+    override fun update(index: Int, func: ((T) -> Unit)?) {
+        if (safeIndex(index)) {
+            func?.invoke(rawList[index])
+            adapterRef?.get()?.notifyItemChanged(index)
+        }
+    }
+
     override fun add(data: T, index: Int?) {
         if (index == null) {
             rawList.add(data)
             adapterRef?.get()?.notifyItemInserted(rawList.size - 1)
-        } else {
+        } else if (safeAddIndex(index)) {
             rawList.add(index, data)
             adapterRef?.get()?.notifyItemInserted(index)
         }
@@ -56,20 +64,21 @@ class LiveList<T>: MutableListSource<T> {
         if (index == null) {
             rawList.addAll(c)
             adapterRef?.get()?.notifyItemRangeInserted(rawList.size - c.size - 1, c.size)
-        } else {
+        } else if (safeAddIndex(index)) {
             rawList.addAll(index, c)
             adapterRef?.get()?.notifyItemRangeInserted(index, c.size)
         }
     }
 
     override fun remove(data: T) {
-        rawList.removeAt(rawList.indexOf(data))
+        removeAt(rawList.indexOf(data))
     }
 
     override fun removeAt(index: Int) {
-        if (index < 0 || index >= rawList.size) { return }
-        rawList.removeAt(index)
-        adapterRef?.get()?.notifyItemRemoved(index)
+        if (safeIndex(index)) {
+            rawList.removeAt(index)
+            adapterRef?.get()?.notifyItemRemoved(index)
+        }
     }
 
     override fun removeAll(c: Collection<T>) {
@@ -78,9 +87,10 @@ class LiveList<T>: MutableListSource<T> {
     }
 
     override fun set(index: Int, data: T) {
-        if (index < 0 || index >= rawList.size) { return }
-        rawList[index] = data
-        adapterRef?.get()?.notifyItemChanged(index)
+        if (safeIndex(index)) {
+            rawList[index] = data
+            adapterRef?.get()?.notifyItemChanged(index)
+        }
     }
 
     override fun clearAndSet(c: Collection<T>) {
@@ -94,4 +104,13 @@ class LiveList<T>: MutableListSource<T> {
         adapterRef?.get()?.notifyDataSetChanged()
     }
 
+    /**
+     * 删、改、查的 [index] 是否安全
+     */
+    private fun safeIndex(index: Int) = index >= 0 && index < rawList.size
+
+    /**
+     * 增 的 [index] 是否安全
+     */
+    private fun safeAddIndex(index: Int) = index >= 0 && index <= rawList.size
 }

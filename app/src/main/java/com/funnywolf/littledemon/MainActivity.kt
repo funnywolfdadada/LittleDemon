@@ -3,6 +3,7 @@ package com.funnywolf.littledemon
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.funnywolf.littledemon.demo.DemoHostFragment
 import com.funnywolf.littledemon.fragments.*
 import com.funnywolf.littledemon.live.BaseLiveObservable
 
@@ -12,7 +13,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        addFragment(FragmentIntent(HostFragment::class.java), false)
+//        addFragment(FragmentIntent(HostFragment::class.java), false)
+        addFragment(FragmentIntent(DemoHostFragment::class.java), false)
         intentObserver.addObserver(this::startFragment, this, false)
     }
 

@@ -183,6 +183,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
 
+            <TextView
+                    android:id="@+id/viewDragTest"
+                    android:text="View Drag Test"
+                    android:textSize="24sp"
+                    android:textColor="#FFFF"
+                    android:background="#3000"
+                    android:layout_margin="10dp"
+                    android:padding="10dp"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
         </LinearLayout>
     </ScrollView>
 

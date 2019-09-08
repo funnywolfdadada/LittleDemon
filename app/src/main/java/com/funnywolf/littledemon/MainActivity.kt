@@ -13,8 +13,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        addFragment(FragmentIntent(HostFragment::class.java), false)
-        addFragment(FragmentIntent(DemoHostFragment::class.java), false)
+        addFragment(FragmentIntent(HostFragment::class.java), false)
+//        addFragment(FragmentIntent(DemoHostFragment::class.java), false)
         intentObserver.addObserver(this::startFragment, this, false)
     }
 

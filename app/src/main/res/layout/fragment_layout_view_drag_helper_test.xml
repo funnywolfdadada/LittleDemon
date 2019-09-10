@@ -6,12 +6,28 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:minHeight="100dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+    <LinearLayout
+            android:id="@+id/linearLayout"
+            android:minHeight="200dp"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent" >
+
+        <TextView
+                android:text="asdasdasd"
+                android:textSize="20sp"
+                android:textColor="#FFFF"
+                android:gravity="center"
+                android:background="#8000"
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+    </LinearLayout>
 
     <ImageView
             android:id="@+id/dragMe"

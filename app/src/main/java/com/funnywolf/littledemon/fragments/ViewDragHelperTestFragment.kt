@@ -35,8 +35,8 @@ class ViewDragHelperTestFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         SimpleDragBehavior.setup(dragMe)
-        SimpleBottomSheetBehavior.setup(recyclerView)
-        recyclerView.adapter = SimpleAdapter.Builder(getRandomStrings(30))
+        SimpleBottomSheetBehavior.setup(linearLayout)
+        recyclerView.adapter = SimpleAdapter.Builder(getRandomStrings(50))
             .add(createSimpleStringHolderInfo())
             .build()
     }
@@ -126,6 +126,7 @@ class SimpleBottomSheetBehavior : CoordinatorLayout.Behavior<View> {
     private var dragHelper: ViewDragHelper? = null
     private var parentRef: WeakReference<CoordinatorLayout>? = null
     private var scrollableChildRef: WeakReference<View>? = null
+    private var childMinTop = 0
 
     /**
      * for [onInterceptTouchEvent]
@@ -137,15 +138,19 @@ class SimpleBottomSheetBehavior : CoordinatorLayout.Behavior<View> {
             return child.id == dragViewId
         }
 
+        override fun getViewVerticalDragRange(child: View): Int {
+            return child.height - 300
+        }
+
         override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
             val parent = parentRef?.get() ?: return top
-            return constrain(top, 0, parent.height)
+            return constrain(top, childMinTop, parent.height - 300)
         }
 
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             if (releasedChild.id != dragViewId) { return }
             val parent = parentRef?.get() ?: return
-            val expandTop = 0
+            val expandTop = childMinTop
             val collapseTop = parent.height - releasedChild.minimumHeight
             val finalTop = when {
                 yvel >= 0 -> collapseTop
@@ -192,25 +197,24 @@ class SimpleBottomSheetBehavior : CoordinatorLayout.Behavior<View> {
         child: View,
         ev: MotionEvent
     ): Boolean {
-        if (child.top > 0) {
+        // 如果未全部展开，则拦截
+        if (child.top > childMinTop) {
             return true
         }
+        // 如果点击位置的找不到可滚动的 View，则拦截
+        val scrollableChild = getTouchedScrollableChild(parent, ev) ?: return true
         when (ev.action) {
-            MotionEvent.ACTION_DOWN -> {
-                lastY = ev.y
-            }
+            MotionEvent.ACTION_DOWN -> lastY = ev.y
             MotionEvent.ACTION_MOVE -> {
-                val scrollableChild = scrollableChildRef?.get() ?: return false
                 val dy = ev.y - lastY
                 lastY = ev.y
-                if (dy > 0 && !scrollableChild.canScrollVertically(-dy.toInt())) {
-                    ev.action = MotionEvent.ACTION_DOWN
-                    dragHelper?.processTouchEvent(ev)
-                    return true
-                }
+                // 此时点击位置的 View 可滑动
+                // 只有在向下滑，且滑不动的情况下才拦截
+                return dy > 0 && !scrollableChild.canScrollVertically(-dy.toInt())
             }
         }
-        return false
+        // 其他情况根据 ViewDragHelper 判断是否拦截
+        return dragHelper?.shouldInterceptTouchEvent(ev) ?: false
     }
 
     override fun onTouchEvent(
@@ -224,6 +228,15 @@ class SimpleBottomSheetBehavior : CoordinatorLayout.Behavior<View> {
             dragHelper?.processTouchEvent(ev)
             true
         }
+    }
+
+    private fun getTouchedScrollableChild(parent: CoordinatorLayout, ev: MotionEvent): View? {
+        val scrollableChild = scrollableChildRef?.get()
+        if (scrollableChild != null
+            && parent.isPointInChildBounds(scrollableChild, ev.x.toInt(), ev.y.toInt())) {
+            return scrollableChild
+        }
+        return null
     }
 
     private fun findScrollableChild(view: View): View? {

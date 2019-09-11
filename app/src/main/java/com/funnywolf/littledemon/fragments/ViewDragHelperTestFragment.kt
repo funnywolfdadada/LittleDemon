@@ -143,15 +143,17 @@ class SimpleBottomSheetBehavior : CoordinatorLayout.Behavior<View> {
         }
 
         override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
-            val parent = parentRef?.get() ?: return top
-            return constrain(top, childMinTop, parent.height - 300)
+            return constrain(top, childMinTop, child.height - 300)
+        }
+
+        override fun onViewPositionChanged(changedView: View, left: Int, top: Int, dx: Int, dy: Int) {
+            Log.d("ZDL", "onViewPositionChanged: ${(changedView.top - childMinTop).toFloat() / (changedView.height - 300 - childMinTop)}")
         }
 
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             if (releasedChild.id != dragViewId) { return }
-            val parent = parentRef?.get() ?: return
             val expandTop = childMinTop
-            val collapseTop = parent.height - releasedChild.minimumHeight
+            val collapseTop = releasedChild.height - releasedChild.minimumHeight
             val finalTop = when {
                 yvel >= 0 -> collapseTop
                 releasedChild.top > collapseTop -> collapseTop

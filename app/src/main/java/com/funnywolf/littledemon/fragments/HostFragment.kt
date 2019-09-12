@@ -13,7 +13,7 @@ class HostFragment: Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MainActivity.startFragment(ViewDragHelperTestFragment::class.java)
+        MainActivity.startFragment(TestFragment::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -26,17 +26,8 @@ class HostFragment: Fragment() {
     }
 
     private fun initViews() {
-        bind(dragClose, DragCloseFragment::class.java)
-        bind(dragExtend, DragExtendFragment::class.java)
-        bind(nestScrollView, NestScrollViewFragment::class.java)
-        bind(constrainLayoutTest, ConstraintLayoutTestFragment::class.java)
-        bind(scrollAndDragExtend, ScrollAndDragExtentFragment::class.java)
         bind(simpleList, SimpleListFragment::class.java)
         bind(fragmentViewPager, FragmentViewPagerFragment::class.java)
-        bind(layoutTest, LayoutTestFragment::class.java)
-        bind(foldedText, FoldedTextFragment::class.java)
-        bind(drawerList, DrawerListFragment::class.java)
-        bind(popupWindowTest, PopupWindowTestFragment::class.java)
         bind(motionLayout, MotionLayoutTestFragment::class.java)
         bind(coordinatorLayout, CoordinatorLayoutTestFragment::class.java)
         bind(viewDragTest, ViewDragHelperTestFragment::class.java)

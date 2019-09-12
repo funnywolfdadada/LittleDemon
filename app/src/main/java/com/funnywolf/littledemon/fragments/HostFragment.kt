@@ -26,6 +26,7 @@ class HostFragment: Fragment() {
     }
 
     private fun initViews() {
+        bind(testFragment, TestFragment::class.java)
         bind(simpleList, SimpleListFragment::class.java)
         bind(fragmentViewPager, FragmentViewPagerFragment::class.java)
         bind(motionLayout, MotionLayoutTestFragment::class.java)

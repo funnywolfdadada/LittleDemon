@@ -19,6 +19,11 @@
 
             <TextView
                     style="@style/EntryButtonStyle"
+                    android:id="@+id/testFragment"
+                    android:text="testFragment"/>
+
+            <TextView
+                    style="@style/EntryButtonStyle"
                     android:id="@+id/simpleList"
                     android:text="simpleList"/>
 

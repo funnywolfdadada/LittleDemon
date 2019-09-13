@@ -113,7 +113,7 @@ interface HolderCallback {
 
 class ListDemoHolderInfo(var callback: HolderCallback?): SimpleAdapter.HolderInfo<DemoModel>(DemoModel::class.java, R.layout.view_holder_list_demo) {
 
-    override fun onCreateViewHolder(holder: SimpleAdapter.SimpleHolder<DemoModel>) {
+    override fun onCreate(holder: SimpleAdapter.SimpleHolder<DemoModel>) {
         holder.itemView.setOnClickListener {
             Toast.makeText(it.context, "Clicked ${holder.currentData.text}", Toast.LENGTH_SHORT).show()
         }
@@ -129,7 +129,7 @@ class ListDemoHolderInfo(var callback: HolderCallback?): SimpleAdapter.HolderInf
         }
     }
 
-    override fun onBindViewHolder(holder: SimpleAdapter.SimpleHolder<DemoModel>) {
+    override fun onBind(holder: SimpleAdapter.SimpleHolder<DemoModel>) {
         holder.getView<TextView>(R.id.tvTitle).text = holder.currentData.text
         holder.getView<LoadingView>(R.id.ivLoading).loading(holder.currentData.isRefreshing)
     }

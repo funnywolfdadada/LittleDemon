@@ -47,6 +47,11 @@
                     android:id="@+id/viewDragTest"
                     android:text="viewDragTest"/>
 
+            <TextView
+                    style="@style/EntryButtonStyle"
+                    android:id="@+id/layoutManagerTest"
+                    android:text="layoutManagerTest"/>
+
         </LinearLayout>
     </ScrollView>
 

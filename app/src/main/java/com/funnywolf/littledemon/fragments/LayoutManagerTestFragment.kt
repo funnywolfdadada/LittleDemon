@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.R
+import com.funnywolf.littledemon.layoutmanager.TagLayoutManager
 import com.funnywolf.littledemon.layoutmanager.TagLayoutManagerWithoutRecycler
 import com.funnywolf.littledemon.live.LiveList
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
@@ -41,7 +42,8 @@ class LayoutManagerTestFragment: Fragment() {
             .build()
         liveList.bind(adapter)
         recyclerView.adapter = adapter
-        recyclerView.layoutManager = TagLayoutManagerWithoutRecycler()
+        recyclerView.layoutManager = TagLayoutManager()
+        recyclerView.setBackgroundResource(R.mipmap.bg0)
     }
 
 }

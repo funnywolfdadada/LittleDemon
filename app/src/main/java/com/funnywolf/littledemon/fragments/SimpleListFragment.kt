@@ -54,6 +54,9 @@ class SimpleListFragment: Fragment() {
                 holder.getView<TextView>(R.id.content).text = holder.currentData.toString()
             }))
             .build()
+
+        root.clipChildren = false
+        recyclerView.clipChildren = false
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
         RecyclerViewLoadMore.bind(recyclerView) {

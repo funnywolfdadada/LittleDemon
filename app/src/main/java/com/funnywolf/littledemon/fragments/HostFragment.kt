@@ -13,7 +13,7 @@ class HostFragment: Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MainActivity.startFragment(LayoutManagerTestFragment::class.java)
+        MainActivity.startFragment(TestFragment::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -32,6 +32,7 @@ class HostFragment: Fragment() {
         bind(motionLayout, MotionLayoutTestFragment::class.java)
         bind(coordinatorLayout, CoordinatorLayoutTestFragment::class.java)
         bind(viewDragTest, ViewDragHelperTestFragment::class.java)
+        bind(itemDecoration, ItemDecorationTestFragment::class.java)
         bind(layoutManagerTest, LayoutManagerTestFragment::class.java)
     }
 

@@ -49,6 +49,11 @@
 
             <TextView
                     style="@style/EntryButtonStyle"
+                    android:id="@+id/itemDecoration"
+                    android:text="itemDecoration"/>
+
+            <TextView
+                    style="@style/EntryButtonStyle"
                     android:id="@+id/layoutManagerTest"
                     android:text="layoutManagerTest"/>
 

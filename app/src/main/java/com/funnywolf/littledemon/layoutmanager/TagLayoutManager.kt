@@ -42,7 +42,6 @@ class TagLayoutManager(@AlignContent private val alignContent: Int = AlignConten
         // 初始化时不知道要布多少个 view，假设从 0 到 itemCount - 1
         for (i in 0 until itemCount) {
             val child = recycler.getViewForPosition(i)
-            addView(child)
             // 测量
             measureChildWithMargins(child, 0, 0)
             val childTotalWidth = horizontalHelper.getDecoratedMeasurement(child)
@@ -53,6 +52,7 @@ class TagLayoutManager(@AlignContent private val alignContent: Int = AlignConten
                 layoutChunksAndClear(chunks)
                 topOffset += lineMaxHeight
                 if (topOffset > verticalHelper.end) {
+                    removeAndRecycleView(child, recycler)
                     break
                 }
                 leftOffset = horizontalHelper.startAfterPadding
@@ -96,6 +96,7 @@ class TagLayoutManager(@AlignContent private val alignContent: Int = AlignConten
         }
         // layout
         chunks.forEach {
+            addView(it.child)
             layoutDecoratedWithMargins(it.child, it.left, it.top, it.left + it.totalWidth, it.top + it.totalHeight)
         }
         chunks.clear()
@@ -131,14 +132,17 @@ class TagLayoutManager(@AlignContent private val alignContent: Int = AlignConten
             dy < 0 -> layoutTopWhenScrollDown(-dy, recycler, state)
             else -> 0
         }
+//        Log.d("ZDL", "layoutWhenScroll: dy = $dy, real = $real, ")
         // 回收不可见的 View
-//        for (i in 0 until childCount) {
-//            val child = getChildAt(i) ?: continue
-//            if ((real < 0 && verticalHelper.getDecoratedStart(child) - real > verticalHelper.endAfterPadding)
-//                || (real > 0 && verticalHelper.getDecoratedEnd(child) - real < 0)) {
-//                removeAndRecycleView(child, recycler)
-//            }
-//        }
+        for (i in 0 until childCount) {
+            val child = getChildAt(i) ?: continue
+            if (
+                (real < 0 && verticalHelper.getDecoratedStart(child) - real > verticalHelper.endAfterPadding)
+//                || (real > 0 && verticalHelper.getDecoratedEnd(child) - real < 0)
+            ) {
+                removeAndRecycleView(child, recycler)
+            }
+        }
         return real
     }
 
@@ -160,20 +164,68 @@ class TagLayoutManager(@AlignContent private val alignContent: Int = AlignConten
     }
 
     private fun layoutBottomWhenScrollUp(dyAbs: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
-        val lastChild = getChildAt(0) ?: return 0
-        val childBottom = verticalHelper.getDecoratedEnd(lastChild)
-        var bottomOffset = childBottom + dyAbs
-        // 最后一个 child 还没滑到头，直接返回滑动距离
-        if (bottomOffset < 0) {
-            return -dyAbs
+        val lastView = getChildAt(childCount - 1) ?: return 0
+        val lastViewBottom = verticalHelper.getDecoratedEnd(lastView)
+        val verticalLimit = verticalHelper.endAfterPadding
+        // 最后一个 view 还够滑，直接返回滑动距离
+        if (lastViewBottom - dyAbs >= verticalLimit) {
+            Log.d("ZDL", "layoutBottomWhenScrollUp: dy = $dyAbs, real= $dyAbs, lastViewBottom - dyAbs >= verticalLimit")
+            return dyAbs
         }
-        val position = getPosition(lastChild)
-        when (position) {
-            RecyclerView.NO_POSITION -> return 0
-            // 第一个 view 是第一个 item，只用计算下偏移量
-            childCount - 1 -> return childBottom
+        val position = getPosition(lastView)
+        // 最后一个 view 时最后一个 item，返回剩余可以滑动的距离
+        if (position == itemCount - 1) {
+            Log.d("ZDL", "layoutBottomWhenScrollUp: dy = $dyAbs, real= ${lastViewBottom - verticalLimit}, position == itemCount - 1")
+            return lastViewBottom - verticalLimit
         }
-        return dyAbs
+        // 从最后一个 view 的 bottom 开始 layout, 直到下边界加上活动后的距离
+        val verticalEnd = verticalLimit + dyAbs
+        val consumed = fill(lastViewBottom, verticalEnd, position, recycler)
+        // 计算下是否铺满，没铺满则需要计算下消耗的滑动距离
+        return if (consumed > (verticalEnd - lastViewBottom)) {
+            dyAbs
+        } else {
+            consumed
+        }
+    }
+
+    private fun fill(verticalStart: Int, verticalEnd: Int, startPosition: Int, recycler: RecyclerView.Recycler): Int {
+        var horizontalOffset = horizontalHelper.startAfterPadding
+        var verticalOffset = verticalStart
+        var maxLineHeight = 0
+        val chunks = ArrayList<ChildChunk>()
+        for (i in startPosition until itemCount) {
+            val child = recycler.getViewForPosition(i)
+            // 测量
+            measureChildWithMargins(child, 0, 0)
+            val childTotalWidth = horizontalHelper.getDecoratedMeasurement(child)
+            val childTotalHeight = verticalHelper.getDecoratedMeasurement(child)
+            // 判断下水平方向边界，当前行排列不下时就换行
+            if (horizontalOffset + childTotalWidth > horizontalHelper.endAfterPadding) {
+                // 换行时把上一行的都 layout 出来
+                layoutChunksAndClear(chunks)
+                if (verticalOffset + maxLineHeight > verticalEnd) {
+                    // 达到下边界了，把刚拿出来的 child 回收，退出
+                    removeAndRecycleView(child, recycler)
+                    break
+                } else {
+                    // 还有距离就调整偏移量继续 layout
+                    horizontalOffset = horizontalHelper.startAfterPadding
+                    verticalOffset += maxLineHeight
+                    maxLineHeight = 0
+                }
+            }
+            // 先把布局信息存起来，之后再根据对齐方式 layout
+            chunks.add(ChildChunk(child, horizontalOffset, verticalOffset, childTotalWidth, childTotalHeight))
+            horizontalOffset += childTotalWidth
+            maxLineHeight = max(maxLineHeight, childTotalHeight)
+        }
+        // layout 最后一行的 view
+        layoutChunksAndClear(chunks)
+        // 加上最后一行 view 的高度
+        verticalOffset += maxLineHeight
+        // 返回消耗的距离
+        return verticalOffset - verticalStart
     }
 
 }

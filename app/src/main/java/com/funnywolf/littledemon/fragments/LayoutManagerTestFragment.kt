@@ -26,8 +26,7 @@ class LayoutManagerTestFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val liveList = LiveList<String>()
-        liveList.addAll(mutableListOf("A", "BC", "DEF"))
-        liveList.addAll(getRandomStrings(100, false, sizeMin = 1, sizeMax = 5))
+        liveList.addAll(getRandomStrings(100, sizeMin = 1, sizeMax = 5))
         val adapter = SimpleAdapter.Builder(liveList.get())
             .add(SimpleAdapter.HolderInfo(String::class.java, R.layout.view_tag, { holder ->
                 holder.itemView.setOnClickListener { v ->

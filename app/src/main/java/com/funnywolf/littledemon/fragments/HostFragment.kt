@@ -13,7 +13,7 @@ class HostFragment: Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MainActivity.startFragment(TestFragment::class.java)
+        MainActivity.startFragment(LayoutManagerTestFragment::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

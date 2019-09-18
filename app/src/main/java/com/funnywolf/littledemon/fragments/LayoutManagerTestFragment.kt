@@ -26,7 +26,7 @@ class LayoutManagerTestFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val liveList = LiveList<String>()
-        liveList.addAll(getRandomStrings(100, sizeMin = 1, sizeMax = 5))
+        liveList.addAll(getRandomStrings(200, sizeMin = 1, sizeMax = 5))
         val adapter = SimpleAdapter.Builder(liveList.get())
             .add(SimpleAdapter.HolderInfo(String::class.java, R.layout.view_tag, { holder ->
                 holder.itemView.setOnClickListener { v ->
@@ -41,7 +41,7 @@ class LayoutManagerTestFragment: Fragment() {
             .build()
         liveList.bind(adapter)
         recyclerView.adapter = adapter
-        recyclerView.layoutManager = TagLayoutManager()
+        recyclerView.layoutManager = TagLayoutManagerWithoutRecycler()
         recyclerView.setBackgroundResource(R.mipmap.bg0)
     }
 

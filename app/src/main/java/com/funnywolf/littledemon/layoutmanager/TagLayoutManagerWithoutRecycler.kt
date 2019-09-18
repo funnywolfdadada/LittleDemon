@@ -1,6 +1,7 @@
 package com.funnywolf.littledemon.layoutmanager
 
 import android.util.Log
+import android.view.View
 import androidx.recyclerview.widget.OrientationHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.max
@@ -10,6 +11,8 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
 
     private val horizontalHelper = OrientationHelper.createHorizontalHelper(this)
     private val verticalHelper = OrientationHelper.createVerticalHelper(this)
+    private var topmostChild: View? = null
+    private var bottommostChild: View? = null
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
         return RecyclerView.LayoutParams(RecyclerView.LayoutParams.WRAP_CONTENT, RecyclerView.LayoutParams.WRAP_CONTENT)
@@ -26,8 +29,6 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
         }
         // 记录当前偏移
         val verticalOffset = currentVisibleTop()
-        // onLayoutChildren 会调用两次，都需要先把之前 attach 的 detach 掉，然后再利用这些缓存
-        detachAndScrapAttachedViews(recycler)
         // 填充 View
         fill(recycler)
         // 滚到之前的位置
@@ -35,6 +36,8 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
     }
 
     private fun fill(recycler: RecyclerView.Recycler) {
+        // onLayoutChildren 会调用两次，都需要先把之前 attach 的 detach 掉，然后再利用这些缓存
+        detachAndScrapAttachedViews(recycler)
         // 上侧偏移
         var topOffset = verticalHelper.startAfterPadding
         // 左侧偏移
@@ -45,7 +48,6 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
         // 初始化时不知道要布多少个 view，假设从 0 到 itemCount - 1
         for (i in 0 until itemCount) {
             val child = recycler.getViewForPosition(i)
-            addView(child)
             // 测量
             measureChildWithMargins(child, 0, 0)
             val childTotalWidth = horizontalHelper.getDecoratedMeasurement(child)
@@ -96,7 +98,22 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
         }
         // layout
         chunks.forEach {
+            addView(it.child)
             layoutDecoratedWithMargins(it.child, it.left, it.top, it.left + it.totalWidth, it.top + it.totalHeight)
+            topmostChild = topmostChild?.run {
+                if (it.top < verticalHelper.getDecoratedStart(this)) {
+                    it.child
+                } else {
+                    topmostChild
+                }
+            } ?: it.child
+            bottommostChild = bottommostChild?.run {
+                if (it.top + it.totalHeight > verticalHelper.getDecoratedEnd(this)) {
+                    it.child
+                } else {
+                    bottommostChild
+                }
+            } ?: it.child
         }
         chunks.clear()
     }
@@ -106,15 +123,6 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
     override fun scrollVerticallyBy(dy: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
         if (dy == 0 || childCount == 0 || state.isPreLayout || state.isMeasuring) { return 0 }
         // 根据边界计算真正需要滚动的距离
-        val real = calculateRealScroll(dy)
-        // 滚动
-        if (real != 0) {
-            offsetChildrenVertical(-real)
-        }
-        return real
-    }
-
-    private fun calculateRealScroll(dy: Int): Int {
         val top = currentVisibleTop()
         val bottom = currentVisibleBottom()
         val topLimit = verticalHelper.startAfterPadding
@@ -128,8 +136,10 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
             dy > 0 && bottom - dy < bottomLimit -> bottom - bottomLimit
             else -> dy
         }
-        Log.d("ZDL", "calculateRealScroll: dy = $dy, top = $top, topLimit = $topLimit, " +
-                "bottom = $bottom, bottomLimit = $bottomLimit, real = $real")
+        // 滚动
+        if (real != 0) {
+            offsetChildrenVertical(-real)
+        }
         return real
     }
 
@@ -137,18 +147,18 @@ class TagLayoutManagerWithoutRecycler(@AlignContent private val alignContent: In
      * 当前所有可见 View 的 top
      */
     private fun currentVisibleTop(): Int {
-        if (childCount == 0) { return 0 }
-        val child = getChildAt(0) ?: return 0
-        return verticalHelper.getDecoratedStart(child)
+        return topmostChild?.run {
+            verticalHelper.getDecoratedStart(this)
+        } ?: 0
     }
 
     /**
      * 当前所有可见 View 的 bottom
      */
     private fun currentVisibleBottom(): Int {
-        if (childCount == 0) { return 0 }
-        val child = getChildAt(childCount - 1) ?: return 0
-        return verticalHelper.getDecoratedEnd(child)
+        return bottommostChild?.run {
+            verticalHelper.getDecoratedEnd(this)
+        } ?: 0
     }
 
 }

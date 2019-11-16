@@ -1,7 +1,6 @@
 package com.funnywolf.littledemon.demo
 
 import android.os.Bundle
-import android.util.Log
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
@@ -11,16 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
-import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.live.LiveList
-import com.funnywolf.littledemon.live.LiveListSource
+import com.funnywolf.littledemon.utils.LiveList
+import com.funnywolf.littledemon.utils.LiveListSource
 import com.funnywolf.littledemon.model.Paging
 import com.funnywolf.littledemon.model.PagingList
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.utils.RecyclerViewLoadMore
 import com.funnywolf.littledemon.utils.getRandomString
-import com.funnywolf.littledemon.utils.getRandomStrings
 import com.funnywolf.littledemon.views.LoadingView
 import kotlinx.android.synthetic.main.fragment_layout_demo_list.*
 import kotlinx.coroutines.*

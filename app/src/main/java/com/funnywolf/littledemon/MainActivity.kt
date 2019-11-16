@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.demo.DemoHostFragment
 import com.funnywolf.littledemon.fragments.*
-import com.funnywolf.littledemon.live.BaseLiveObservable
+import com.funnywolf.littledemon.utils.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,7 +15,8 @@ class MainActivity : AppCompatActivity() {
 
         addFragment(FragmentIntent(HostFragment::class.java), false)
 //        addFragment(FragmentIntent(DemoHostFragment::class.java), false)
-        intentObserver.addObserver(this::startFragment, this, false)
+        GlobalObserverManager.addObserver(LiveObserver<FragmentIntent>(TYPE_FRAGMENT_INTENT,
+            { stateData -> startFragment(stateData.data) }, this))
     }
 
     private fun startFragment(intent: FragmentIntent?) {
@@ -39,11 +40,10 @@ class MainActivity : AppCompatActivity() {
     data class FragmentIntent(val fragmentClass: Class<out Fragment>, val bundle: Bundle? = null)
 
     companion object {
-
-        private val intentObserver = BaseLiveObservable<FragmentIntent>()
+        private const val TYPE_FRAGMENT_INTENT = -1
 
         fun startFragment(fragmentClass: Class<out Fragment>, bundle: Bundle? = null) {
-            intentObserver.dispatchValue(FragmentIntent(fragmentClass, bundle))
+            GlobalObserverManager.post(TYPE_FRAGMENT_INTENT, STATE_READY, FragmentIntent(fragmentClass, bundle))
         }
 
     }

@@ -1,4 +1,4 @@
-package com.funnywolf.littledemon.live
+package com.funnywolf.littledemon.utils
 
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.ref.WeakReference

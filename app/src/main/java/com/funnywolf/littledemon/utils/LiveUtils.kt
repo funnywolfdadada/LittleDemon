@@ -1,4 +1,4 @@
-package com.funnywolf.littledemon.live
+package com.funnywolf.littledemon.utils
 
 import android.os.Handler
 import android.os.Looper
@@ -10,9 +10,7 @@ val mainHandler: Handler by lazy { Handler(Looper.getMainLooper()) }
 fun isOnMain(): Boolean = Looper.getMainLooper().thread == Thread.currentThread()
 
 fun assertOnMain(methodName: String) {
-    if (!isOnMain()) {
-        throw IllegalStateException("Cannot invoke $methodName on a background thread");
-    }
+    check(isOnMain()) { "Cannot invoke $methodName on a background thread" }
 }
 
 fun runOnMain(func: ()->Unit) {

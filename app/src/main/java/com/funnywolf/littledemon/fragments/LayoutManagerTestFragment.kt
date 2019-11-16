@@ -7,9 +7,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.layoutmanager.TagLayoutManager
 import com.funnywolf.littledemon.layoutmanager.TagLayoutManagerWithoutRecycler
-import com.funnywolf.littledemon.live.LiveList
+import com.funnywolf.littledemon.utils.LiveList
 import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.utils.getRandomStrings
 import kotlinx.android.synthetic.main.fragment_layout_simple_list.*

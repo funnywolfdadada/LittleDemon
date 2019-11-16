@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.funnywolf.littledemon.R
+import com.funnywolf.littledemon.utils.GlobalObserverManager
+import com.funnywolf.littledemon.utils.LiveObserver
 
 class TestFragment: Fragment() {
 

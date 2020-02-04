@@ -59,7 +59,7 @@ class SimpleListFragment: Fragment() {
         recyclerView.clipChildren = false
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
-        RecyclerViewLoadMore.bind(recyclerView) {
+        RecyclerViewLoadMore(recyclerView, 200) {
             Toast.makeText(this@SimpleListFragment.context, "Load More", Toast.LENGTH_SHORT).show()
         }
     }

@@ -62,7 +62,7 @@ class ListDemoFragment: Fragment(), HolderCallback {
         recyclerView.adapter = adapter
         viewModel.getLiveListSource().bind(adapter)
 
-        RecyclerViewLoadMore.bind(recyclerView) {
+        RecyclerViewLoadMore(recyclerView, 200) {
             viewModel.loadMore()
         }
 

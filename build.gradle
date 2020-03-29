@@ -20,6 +20,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven { url "https://raw.githubusercontent.com/funnywolfdadada/repository/master" }
     }
     println("In allprojects, project = ${project.hashCode()}")
 }

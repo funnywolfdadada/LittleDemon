@@ -2,19 +2,21 @@ package com.funnywolf.littledemon.utils
 
 import android.widget.TextView
 import android.widget.Toast
+import com.funnywolf.hollowkit.recyclerview.HolderInfo
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import kotlin.math.round
 import kotlin.random.Random
 
-fun createSimpleStringHolderInfo(): SimpleAdapter.HolderInfo<String> {
-    return SimpleAdapter.HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder, { holder ->
-        holder.itemView.setOnClickListener {
-            Toast.makeText(it.context, "Clicked ${holder.currentData}", Toast.LENGTH_SHORT).show()
-        }
-    }, { holder ->
-        holder.getView<TextView>(R.id.content).text = holder.currentData
-    })
+fun createSimpleStringHolderInfo(): HolderInfo<String> {
+    return HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder,
+        onCreate = { holder ->
+            holder.itemView.setOnClickListener {
+                Toast.makeText(it.context, "Clicked ${holder.data}", Toast.LENGTH_SHORT).show()
+            }
+        },
+        onBind = { holder, data ->
+            holder.v<TextView>(R.id.content)?.text = data
+        })
 }
 
 fun getRandomString(length: Int = (Math.random() * 3 + 7).toInt()): String {

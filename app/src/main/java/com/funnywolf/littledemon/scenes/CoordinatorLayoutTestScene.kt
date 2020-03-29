@@ -1,4 +1,4 @@
-package com.funnywolf.littledemon.fragments
+package com.funnywolf.littledemon.scenes
 
 import android.animation.FloatEvaluator
 import android.content.Context
@@ -9,34 +9,32 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
 import com.funnywolf.littledemon.utils.getRandomStrings
-import kotlinx.android.synthetic.main.fragment_layout_coordinator_layout_text.*
 import java.lang.ref.WeakReference
-import kotlin.math.abs
 
-class CoordinatorLayoutTestFragment: Fragment() {
+class CoordinatorLayoutTestScene: Scene() {
     override fun onCreateView(
         inflater: LayoutInflater,
-        container: ViewGroup?,
+        container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_layout_coordinator_layout_text, container, false)
+    ): View {
+        return inflater.inflate(R.layout.scene_layout_coordinator_layout_text, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         ((recyclerView.layoutParams as? CoordinatorLayout.LayoutParams)
             ?.behavior as? HeaderCollapseBehavior)?.dependencyId = R.id.collapseHeaderImage
 
-        recyclerView.adapter = SimpleAdapter.Builder(getRandomStrings(100))
-            .add(createSimpleStringHolderInfo())
-            .build()
+        recyclerView.adapter = SimpleAdapter(getRandomStrings(100))
+            .addHolderInfo(createSimpleStringHolderInfo())
     }
 
 }

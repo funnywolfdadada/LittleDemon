@@ -1,22 +1,20 @@
-package com.funnywolf.littledemon.fragments
+package com.funnywolf.littledemon.scenes
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import com.bytedance.scene.Scene
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.utils.GlobalObserverManager
-import com.funnywolf.littledemon.utils.LiveObserver
 
-class TestFragment: Fragment() {
+class TestScene: Scene() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
-        container: ViewGroup?,
+        container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_layou_test, container, false)
+    ): View {
+        return inflater.inflate(R.layout.scene_layou_test, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

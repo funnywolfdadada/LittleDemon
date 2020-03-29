@@ -3,7 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/fragment_content"
-        android:background="@mipmap/bg0"
+        android:background="@drawable/bg0"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
@@ -19,43 +19,28 @@
 
             <TextView
                     style="@style/EntryButtonStyle"
-                    android:id="@+id/testFragment"
-                    android:text="testFragment"/>
+                    android:id="@+id/test_scene"
+                    android:text="test_scene"/>
 
             <TextView
                     style="@style/EntryButtonStyle"
-                    android:id="@+id/simpleList"
-                    android:text="simpleList"/>
+                    android:id="@+id/coordinator_layout"
+                    android:text="coordinator_layout"/>
 
             <TextView
                     style="@style/EntryButtonStyle"
-                    android:id="@+id/fragmentViewPager"
-                    android:text="fragmentViewPager"/>
+                    android:id="@+id/view_drag_test"
+                    android:text="view_drag_test"/>
 
             <TextView
                     style="@style/EntryButtonStyle"
-                    android:id="@+id/motionLayout"
-                    android:text="motionLayout"/>
+                    android:id="@+id/item_decoration"
+                    android:text="item_decoration"/>
 
             <TextView
                     style="@style/EntryButtonStyle"
-                    android:id="@+id/coordinatorLayout"
-                    android:text="coordinatorLayout"/>
-
-            <TextView
-                    style="@style/EntryButtonStyle"
-                    android:id="@+id/viewDragTest"
-                    android:text="viewDragTest"/>
-
-            <TextView
-                    style="@style/EntryButtonStyle"
-                    android:id="@+id/itemDecoration"
-                    android:text="itemDecoration"/>
-
-            <TextView
-                    style="@style/EntryButtonStyle"
-                    android:id="@+id/layoutManagerTest"
-                    android:text="layoutManagerTest"/>
+                    android:id="@+id/layout_manager"
+                    android:text="layout_manager"/>
 
         </LinearLayout>
     </ScrollView>

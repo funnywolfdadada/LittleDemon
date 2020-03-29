@@ -1,40 +1,41 @@
-package com.funnywolf.littledemon.fragments
+package com.funnywolf.littledemon.scenes
 
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
 import com.funnywolf.littledemon.utils.getRandomStrings
-import kotlinx.android.synthetic.main.fragment_layout_simple_list.*
 
-class ItemDecorationTestFragment: Fragment() {
+class ItemDecorationTestScene: Scene() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
-        container: ViewGroup?,
+        container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_layout_simple_list, container, false)
+    ): View {
+        return inflater.inflate(R.layout.scene_layout_simple_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        recyclerView.setBackgroundResource(R.mipmap.bg0)
-        recyclerView.adapter = SimpleAdapter.Builder(getRandomStrings(111, false))
-            .add(createSimpleStringHolderInfo())
-            .build()
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.addItemDecoration(IndexDecorator())
+        findViewById<RecyclerView>(R.id.recyclerView)?.also { it ->
+            it.setBackgroundResource(R.drawable.bg0)
+            it.adapter = SimpleAdapter(getRandomStrings(111, false))
+                .addHolderInfo(createSimpleStringHolderInfo())
+            it.layoutManager = LinearLayoutManager(sceneContext)
+            it.addItemDecoration(IndexDecorator())
+        }
     }
 
     class IndexDecorator: RecyclerView.ItemDecoration() {

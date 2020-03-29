@@ -1,6 +1,5 @@
-package com.funnywolf.littledemon.fragments
+package com.funnywolf.littledemon.scenes
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.os.Bundle
 import android.util.AttributeSet
@@ -12,33 +11,31 @@ import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.littledemon.R
-import com.funnywolf.littledemon.simpleadapter.SimpleAdapter
 import com.funnywolf.littledemon.utils.constrain
 import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
 import com.funnywolf.littledemon.utils.getRandomStrings
-import kotlinx.android.synthetic.main.fragment_layout_view_drag_helper_test.*
 import java.lang.ref.WeakReference
 
-class ViewDragHelperTestFragment: Fragment() {
+class ViewDragHelperTestScene: Scene() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
-        container: ViewGroup?,
+        container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_layout_view_drag_helper_test, container, false)
+    ): View {
+        return inflater.inflate(R.layout.scene_layout_view_drag_helper_test, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        SimpleDragBehavior.setup(dragMe)
-        SimpleBottomSheetBehavior.setup(linearLayout)
-        recyclerView.adapter = SimpleAdapter.Builder(getRandomStrings(50))
-            .add(createSimpleStringHolderInfo())
-            .build()
+        SimpleDragBehavior.setup(view.findViewById(R.id.dragMe))
+        SimpleBottomSheetBehavior.setup(view.findViewById(R.id.linearLayout))
+        view.findViewById<RecyclerView>(R.id.recyclerView).adapter = SimpleAdapter(getRandomStrings(50))
+            .addHolderInfo(createSimpleStringHolderInfo())
     }
 
 }

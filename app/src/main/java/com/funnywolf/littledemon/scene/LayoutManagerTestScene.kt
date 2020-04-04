@@ -1,4 +1,4 @@
-package com.funnywolf.littledemon.scenes
+package com.funnywolf.littledemon.scene
 
 import android.os.Bundle
 import android.view.LayoutInflater

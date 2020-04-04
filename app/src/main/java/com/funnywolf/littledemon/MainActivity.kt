@@ -1,11 +1,11 @@
 package com.funnywolf.littledemon
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
 import com.bytedance.scene.NavigationSceneUtility
 import com.bytedance.scene.SceneDelegate
 
-class MainActivity : Activity() {
+class MainActivity : FragmentActivity() {
     private var delegate: SceneDelegate? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

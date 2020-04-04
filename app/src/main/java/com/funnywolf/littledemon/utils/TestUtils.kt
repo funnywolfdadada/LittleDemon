@@ -2,14 +2,18 @@ package com.funnywolf.littledemon.utils
 
 import android.widget.TextView
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.hollowkit.recyclerview.HolderInfo
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.littledemon.R
 import kotlin.math.round
 import kotlin.random.Random
 
-fun createSimpleStringHolderInfo(): HolderInfo<String> {
+fun createSimpleStringHolderInfo(color: Int = 0xFFF89798.toInt()): HolderInfo<String> {
     return HolderInfo(String::class.java, R.layout.view_layout_simple_view_holder,
         onCreate = { holder ->
+            holder.itemView.setBackgroundColor(color)
             holder.itemView.setOnClickListener {
                 Toast.makeText(it.context, "Clicked ${holder.data}", Toast.LENGTH_SHORT).show()
             }
@@ -40,4 +44,9 @@ fun getRandomInt(n: Int, start: Int = 0, end: Int = Int.MAX_VALUE): MutableList<
     return MutableList(n) {
         Random.nextInt(start, end)
     }
+}
+
+fun RecyclerView.simpleInit(count: Int = 30, color: Int = 0xFFF89798.toInt()) {
+    layoutManager = LinearLayoutManager(context)
+    adapter = SimpleAdapter(getRandomStrings(count)).addHolderInfo(createSimpleStringHolderInfo(color))
 }

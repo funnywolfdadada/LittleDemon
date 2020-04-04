@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.funnywolf.hollowkit.runOnMain
 import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 
@@ -156,7 +157,7 @@ class LiveObserver(
     override fun onChanged(state: State) {
         // 需要在主线程执行，就切到主线程
         if (mustRunOnMain && Thread.currentThread() != Looper.getMainLooper().thread) {
-            runOnMain { onChanged(state) }
+            runOnMain(Runnable { onChanged(state) })
             return
         }
         if (owner != null && !owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
@@ -183,7 +184,7 @@ class LiveObserver(
     override fun onChangedError(e: Throwable) {
         // 需要在主线程执行，就切到主线程
         if (mustRunOnMain && Thread.currentThread() != Looper.getMainLooper().thread) {
-            runOnMain { onChangedError(e) }
+            runOnMain(Runnable { onChangedError(e) })
             return
         }
         onChanged.onChangedError(e)

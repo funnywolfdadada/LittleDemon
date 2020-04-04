@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<com.funnywolf.littledemon.view.LinkedScrollView
+        android:id="@+id/linked_scroll"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:background="@drawable/bg0"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent"
+        android:layout_marginTop="00dp"
+        >
+</com.funnywolf.littledemon.view.LinkedScrollView>

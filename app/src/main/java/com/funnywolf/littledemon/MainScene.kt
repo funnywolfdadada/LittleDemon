@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bytedance.scene.Scene
-import com.funnywolf.littledemon.scenes.*
+import com.funnywolf.littledemon.scene.*
 
 /**
  * 主页

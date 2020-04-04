@@ -2,8 +2,6 @@ package com.funnywolf.littledemon.utils
 
 import android.content.Context
 
-fun getScreenHeight(context: Context) = context.resources.displayMetrics.heightPixels
-
-fun getScreenWidth(context: Context) = context.resources.displayMetrics.widthPixels
-
-fun dp2pix(context: Context, dp: Int) = (context.resources.displayMetrics.density * dp).toInt()
+private fun Context.displayMetrics() = this.resources.displayMetrics
+fun Context.getScreenHeight() = displayMetrics().heightPixels
+fun Float.dp2pix(context: Context) = context.displayMetrics().density * this

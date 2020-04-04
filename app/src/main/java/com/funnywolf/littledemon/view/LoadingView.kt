@@ -1,4 +1,4 @@
-package com.funnywolf.littledemon.views
+package com.funnywolf.littledemon.view
 
 import android.animation.ValueAnimator
 import android.content.Context

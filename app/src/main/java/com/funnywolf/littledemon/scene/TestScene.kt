@@ -6,9 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.recyclerview.HolderInfo
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
+import com.funnywolf.hollowkit.recyclerview.SimpleHolder
 import com.funnywolf.littledemon.R
+import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
+import com.funnywolf.littledemon.utils.getRandomStrings
 import com.funnywolf.littledemon.utils.simpleInit
 import com.funnywolf.littledemon.utils.toast
 import com.funnywolf.littledemon.view.JellyLayout
@@ -26,7 +32,30 @@ class TestScene: Scene() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        findViewById<JellyLayout>(R.id.jelly)?.also {
+        findViewById<RecyclerView>(R.id.recycler_view)?.also {
+            val list = ArrayList<Any>()
+            list.addAll(getRandomStrings(33))
+            list.add(HorizonModel())
+            list.addAll(getRandomStrings(33))
+            it.adapter = SimpleAdapter(list)
+                .addHolderInfo(createSimpleStringHolderInfo())
+                .addHolderInfo(
+                    HolderInfo(HorizonModel::class.java, R.layout.holder_horizon, HorizonViewHolder::class.java)
+                )
+            it.layoutManager = LinearLayoutManager(it.context)
+        }
+    }
+
+}
+
+class HorizonModel
+
+class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
+    private val jelly = v.findViewById<JellyLayout>(R.id.jelly)
+    private val recyclerView = v.findViewById<RecyclerView>(R.id.recycler_view)
+
+    init {
+        jelly.also {
             val top = TextView(it.context).also { v ->
                 v.setBackgroundColor(0x800FF000.toInt())
                 v.textSize = 16F
@@ -48,10 +77,10 @@ class TestScene: Scene() {
                 v.gravity = Gravity.CENTER_VERTICAL or Gravity.START
             }
             it
-//                .setTopView(top, 333,  333)
+                .setTopView(top, 333,  333)
                 .setBottomView(bottom, 333, 333)
                 .setLeftView(left, 333, 333)
-//                .setRightView(right, 333, 333)
+                .setRightView(right, 333, 333)
                 .addListeners(object: JellyLayout.Listener {
                     override fun onScrollChanged(region: Int, percent: Float) {
                         when (region) {
@@ -75,10 +104,8 @@ class TestScene: Scene() {
                     }
                 })
         }
-
-        findViewById<RecyclerView>(R.id.recycler_view)?.also {
-            it.simpleInit(50)
-        }
+        recyclerView.simpleInit(6, 0x80000000.toInt())
+        recyclerView.layoutManager = LinearLayoutManager(v.context, RecyclerView.HORIZONTAL, false)
     }
 
 }

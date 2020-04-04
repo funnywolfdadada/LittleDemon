@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-        android:id="@+id/linked_scroll"
+<com.funnywolf.littledemon.view.JellyLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:background="@drawable/bg0"
+        android:id="@+id/jelly"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="00dp"
-        >
+        android:layout_height="100dp">
 
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="100dp"/>
 
-</FrameLayout>
+</com.funnywolf.littledemon.view.JellyLayout>

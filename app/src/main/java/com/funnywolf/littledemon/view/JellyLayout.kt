@@ -148,9 +148,9 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
         when (e.action) {
             // down 时复位下当前区域
             MotionEvent.ACTION_DOWN -> currRegion = REGION_NONE
-            // up 时复位到原始位置
+            // up 或 cancel 时复位到原始位置
             // 在这里处理是因为自身可能并没有处理任何 touch 事件，也就不能在 onToucheEvent 中处理到 up 事件
-            MotionEvent.ACTION_UP -> resetScroll()
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> resetScroll()
         }
         return super.dispatchTouchEvent(e)
     }
@@ -216,6 +216,8 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
                 lastX = e.x
                 lastY = e.y
                 if (canScrollHorizontally(dx) || canScrollVertically(dy)) {
+                    // 自己可以处理就请求父 view 不要拦截事件
+                    requestDisallowInterceptTouchEvent(true)
                     dispatchScroll(dx, dy)
                     true
                 } else {
@@ -311,15 +313,27 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
         when (currRegion) {
             REGION_NONE -> {
                 currRegion = when {
-                    abs(dScrollX) > abs(dScrollY) -> if (dScrollX > 0) {
-                        REGION_RIGHT
-                    } else {
-                        REGION_LEFT
+                    abs(dScrollX) > abs(dScrollY) -> when {
+                        !canScrollHorizontally(dScrollX) -> {
+                            REGION_NONE
+                        }
+                        dScrollX > 0 -> {
+                            REGION_RIGHT
+                        }
+                        else -> {
+                            REGION_LEFT
+                        }
                     }
-                    dScrollY != 0 -> if (dScrollY > 0) {
-                        REGION_BOTTOM
-                    } else {
-                        REGION_TOP
+                    dScrollY != 0 -> when {
+                        !canScrollVertically(dScrollY) -> {
+                            REGION_NONE
+                        }
+                        dScrollY > 0 -> {
+                            REGION_BOTTOM
+                        }
+                        else -> {
+                            REGION_TOP
+                        }
                     }
                     else -> REGION_NONE
                 }

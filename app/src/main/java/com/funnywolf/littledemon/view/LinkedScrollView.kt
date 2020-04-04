@@ -147,7 +147,7 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 是否处理嵌套滚动，这里只接收垂直方向的嵌套滚动
+     * 这里只接收垂直方向的嵌套滚动
      */
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         return axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
@@ -191,8 +191,8 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
 
     /**
      * 根据需要滚动的 view target 和滚动方向，确定将滚动量具体传递给哪个 view
-     * 向上滚动时优先级：target（在顶部 view 时） -> 自己 -> 底部 view
-     * 向下滚动时优先级: target（在底部 view 时） -> 自己 -> 顶部 view
+     * 向下滚动（子 view 整体上移）时优先级：target（在顶部 view 时） -> 自己 -> 底部 view
+     * 向上滚动（子 view 整体下移）时优先级: target（在底部 view 时） -> 自己 -> 顶部 view
      *
      * @param dScrollY y 轴的滚动增量
      * @param target 需要滚动的子 view，null 时则是自身需要在滚动
@@ -200,7 +200,7 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
      */
     private fun dispatchScrollY(dScrollY: Int, target: View? = null): View? {
         return if (dScrollY > 0) {
-            // 向上滚动
+            // 向下滚动（子 view 整体上移）
             if (target != null && topContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
                 // target 在顶部 view 中，且自己还可以消耗滚动，就自己处理
                 target
@@ -213,7 +213,7 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
                 bottomScrollableView
             }
         } else {
-            // 向下滚动
+            // 向上滚动（子 view 整体下移）
             if (target != null && bottomContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
                 // target 在底部 view 中，且自己还可以消耗滚动，就自己处理
                 target

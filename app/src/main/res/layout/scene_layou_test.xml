@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.funnywolf.littledemon.view.LinkedScrollView
+<FrameLayout
         android:id="@+id/linked_scroll"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:background="@drawable/bg0"
@@ -7,4 +7,18 @@
         android:layout_height="match_parent"
         android:layout_marginTop="00dp"
         >
-</com.funnywolf.littledemon.view.LinkedScrollView>
+
+    <com.funnywolf.littledemon.view.JellyLayout
+            android:id="@+id/jelly"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            >
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+    </com.funnywolf.littledemon.view.JellyLayout>
+
+
+</FrameLayout>

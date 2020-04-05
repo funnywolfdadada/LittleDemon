@@ -29,7 +29,6 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
      */
     private var topScrollableView: View? = null
 
-
     /**
      * 底部视图容器
      */
@@ -70,9 +69,6 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
      */
     private var lastFlingY = 0
 
-    /**
-     * 嵌滚滑动的帮助类
-     */
     private val parentHelper = NestedScrollingParentHelper(this)
 
     constructor(context: Context): super(context)
@@ -91,11 +87,21 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
         requestLayout()
     }
 
+    fun removeTopView() {
+        topContainer.removeAllViews()
+        topScrollableView = null
+    }
+
     fun setBottomView(v: View, scrollableChild: View? = null) {
         bottomContainer.removeAllViews()
         bottomContainer.addView(v)
         bottomScrollableView = scrollableChild
         requestLayout()
+    }
+
+    fun removeBottomView() {
+        bottomContainer.removeAllViews()
+        bottomScrollableView = null
     }
 
     /**
@@ -146,10 +152,8 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
         }
     }
 
-    /**
-     * 这里只接收垂直方向的嵌套滚动
-     */
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
+        // 只处理垂直方向的滚动
         return axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
     }
 
@@ -157,27 +161,14 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
         parentHelper.onNestedScrollAccepted(child, target, axes)
     }
 
-    override fun onStopNestedScroll(target: View, type: Int) {
-        parentHelper.onStopNestedScroll(target)
-    }
-
-    override fun getNestedScrollAxes(): Int {
-        return parentHelper.nestedScrollAxes
-    }
-
-    /**
-     * target 将要滚动时的回调。分发 y 轴的滚动量，如果需要自身滚就自身滚，不需要就不再处理
-     */
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
+        // 分发 y 轴的滚动量，如果需要自身滚就拦截处理
         if (dispatchScrollY(dy, target) == this) {
             consumed[1] = dy
             scrollBy(0, dy)
         }
     }
 
-    /**
-     * target 滚动后的回调。未消耗的滚动量，就需要自身滚动
-     */
     override fun onNestedScroll(
         target: View,
         dxConsumed: Int,
@@ -186,7 +177,45 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
         dyUnconsumed: Int,
         type: Int
     ) {
+        // 未消耗的滚动量，就需要自身滚动
         scrollBy(0, dyUnconsumed)
+    }
+
+    /**
+     * 子 view 将要 fling 时的回调。这里拦截 y 轴的 fling 事件，自己处理
+     */
+    override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
+        handleFling(velocityY.toInt(), target)
+        return true
+    }
+
+    override fun onStopNestedScroll(target: View, type: Int) {
+        parentHelper.onStopNestedScroll(target)
+    }
+
+    /**
+     * 处理 fling，通过 scroller 计算 fling，暂存 fling 的初值和需要 fling 的 view
+     */
+    private fun handleFling(vy: Int, target: View?) {
+        lastFlingY = 0
+        scroller.fling(0, lastFlingY, 0, vy, 0, 0, Int.MIN_VALUE, Int.MAX_VALUE)
+        flingChild = target
+        invalidate()
+    }
+
+    /**
+     * 计算 fling 的滚动量，并将其分发到真正需要处理的 view
+     */
+    override fun computeScroll() {
+        if (scroller.computeScrollOffset()) {
+            val currentFlingY = scroller.currY
+            val dScrollY = currentFlingY - lastFlingY
+            dispatchScrollY(dScrollY, flingChild)?.scrollBy(0, dScrollY)
+            lastFlingY = currentFlingY
+            invalidate()
+        } else {
+            flingChild = null
+        }
     }
 
     /**
@@ -229,40 +258,7 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 子 view 将要 fling 时的回调。这里拦截 y 轴的 fling 事件，自己处理
-     */
-    override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
-        handleFling(velocityY.toInt(), target)
-        return true
-    }
-
-    /**
-     * 处理 fling，通过 scroller 计算 fling，暂存 fling 的初值和需要 fling 的 view
-     */
-    private fun handleFling(vy: Int, target: View?) {
-        lastFlingY = 0
-        scroller.fling(0, lastFlingY, 0, vy, 0, 0, Int.MIN_VALUE, Int.MAX_VALUE)
-        flingChild = target
-        invalidate()
-    }
-
-    /**
-     * 计算 fling 的滚动量，并将其分发到真正需要处理的 view
-     */
-    override fun computeScroll() {
-        if (scroller.computeScrollOffset()) {
-            val currentFlingY = scroller.currY
-            val dScrollY = currentFlingY - lastFlingY
-            dispatchScrollY(dScrollY, flingChild)?.scrollBy(0, dScrollY)
-            lastFlingY = currentFlingY
-            invalidate()
-        } else {
-            flingChild = null
-        }
-    }
-
-    /**
-     * 根据滚动范围，确定是否可以垂直滚动
+     * 滚动范围是[0, [maxScrollY]]，根据方向判断垂直方向是否可以滚动
      */
     override fun canScrollVertically(direction: Int): Boolean {
         return if (direction > 0) {
@@ -273,7 +269,7 @@ class LinkedScrollView: FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 自身滚动，做范围限制
+     * 滚动前做范围限制
      */
     override fun scrollTo(x: Int, y: Int) {
         super.scrollTo(x, when {

@@ -24,7 +24,7 @@
             android:layout_height="30dp" />
 
     <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+            android:id="@+id/recycler_view"
             app:layout_behavior=".scene.HeaderCollapseBehavior"
             app:layout_anchorGravity="bottom"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

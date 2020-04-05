@@ -41,7 +41,7 @@ class LayoutManagerTestScene: Scene() {
             }))
         liveList.bind(adapter)
 
-        findViewById<RecyclerView>(R.id.recyclerView)?.also {
+        findViewById<RecyclerView>(R.id.recycler_view)?.also {
             it.adapter = adapter
             it.layoutManager = TagLayoutManagerWithoutRecycler()
             it.setBackgroundResource(R.drawable.bg0)

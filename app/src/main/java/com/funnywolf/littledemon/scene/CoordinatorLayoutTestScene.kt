@@ -29,7 +29,7 @@ class CoordinatorLayoutTestScene: Scene() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_view)
         ((recyclerView.layoutParams as? CoordinatorLayout.LayoutParams)
             ?.behavior as? HeaderCollapseBehavior)?.dependencyId = R.id.collapseHeaderImage
 

@@ -34,7 +34,7 @@ class ViewDragHelperTestScene: Scene() {
         super.onViewCreated(view, savedInstanceState)
         SimpleDragBehavior.setup(view.findViewById(R.id.dragMe))
         SimpleBottomSheetBehavior.setup(view.findViewById(R.id.linearLayout))
-        view.findViewById<RecyclerView>(R.id.recyclerView).adapter = SimpleAdapter(getRandomStrings(50))
+        view.findViewById<RecyclerView>(R.id.recycler_view).adapter = SimpleAdapter(getRandomStrings(50))
             .addHolderInfo(createSimpleStringHolderInfo())
     }
 

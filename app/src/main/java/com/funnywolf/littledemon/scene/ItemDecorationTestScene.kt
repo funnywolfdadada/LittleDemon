@@ -28,7 +28,7 @@ class ItemDecorationTestScene: Scene() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        findViewById<RecyclerView>(R.id.recyclerView)?.also { it ->
+        findViewById<RecyclerView>(R.id.recycler_view)?.also { it ->
             it.setBackgroundResource(R.drawable.bg0)
             it.adapter = SimpleAdapter(getRandomStrings(111, false))
                 .addHolderInfo(createSimpleStringHolderInfo())

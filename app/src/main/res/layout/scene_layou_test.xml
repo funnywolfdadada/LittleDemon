@@ -8,8 +8,24 @@
         android:layout_marginTop="00dp"
         >
 
+    <TextView
+            android:id="@+id/tv_test_header"
+            android:text="Test Scene"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:textColor="#FFFF"
+            android:background="#204020"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"/>
+
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"
+            android:layout_marginTop="50dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    <com.funnywolf.littledemon.view.BottomSheetLayout
+            android:id="@+id/bottom_sheet"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 

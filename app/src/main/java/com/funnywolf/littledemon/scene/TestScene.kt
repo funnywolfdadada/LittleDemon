@@ -17,9 +17,14 @@ import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
 import com.funnywolf.littledemon.utils.getRandomStrings
 import com.funnywolf.littledemon.utils.simpleInit
 import com.funnywolf.littledemon.utils.toast
+import com.funnywolf.littledemon.view.BOTTOM_SHEET_STATE_COLLAPSED
+import com.funnywolf.littledemon.view.BottomSheetLayout
 import com.funnywolf.littledemon.view.JellyLayout
 
 class TestScene: Scene() {
+
+    private var bottomSheetLayout: BottomSheetLayout? = null
+    private var contentView: View? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,12 +43,37 @@ class TestScene: Scene() {
             list.add(HorizonModel())
             list.addAll(getRandomStrings(33))
             it.adapter = SimpleAdapter(list)
-                .addHolderInfo(createSimpleStringHolderInfo())
+                .addHolderInfo(createSimpleStringHolderInfo(0x80000F00.toInt()))
                 .addHolderInfo(
                     HolderInfo(HorizonModel::class.java, R.layout.holder_horizon, HorizonViewHolder::class.java)
                 )
             it.layoutManager = LinearLayoutManager(it.context)
         }
+
+        findViewById<BottomSheetLayout>(R.id.bottom_sheet)?.also {
+            bottomSheetLayout = it
+
+            LayoutInflater.from(view.context).inflate(R.layout.scene_layout_simple_list, it, false)?.also { cv ->
+                cv.findViewById<RecyclerView>(R.id.recycler_view)?.also { rv -> rv.simpleInit(55) }
+                val lp = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                lp.bottomMargin = 200
+                cv.layoutParams = lp
+                contentView = cv
+            }
+        }
+
+        findViewById<TextView>(R.id.tv_test_header)?.setOnClickListener {
+            if (bottomSheetLayout?.contentView == null) {
+                bottomSheetLayout?.setContentView(
+                    contentView?:return@setOnClickListener,
+                    300,
+                    BOTTOM_SHEET_STATE_COLLAPSED
+                )
+            } else {
+                bottomSheetLayout?.removeContentView()
+            }
+        }
+
     }
 
 }
@@ -104,7 +134,7 @@ class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
                     }
                 })
         }
-        recyclerView.simpleInit(6, 0x80000000.toInt())
+        recyclerView.simpleInit(6, 0x800F0000.toInt())
         recyclerView.layoutManager = LinearLayoutManager(v.context, RecyclerView.HORIZONTAL, false)
     }
 

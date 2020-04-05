@@ -158,6 +158,92 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
         }
     }
 
+    override fun dispatchTouchEvent(e: MotionEvent): Boolean {
+        when (e.action) {
+            // down 时复位上次的滚动方向
+            MotionEvent.ACTION_DOWN -> lastDir = 0
+            // up 或 cancel 时平滑滚动到目标位置
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> smoothScrollToY(when {
+                lastDir > 0 -> maxScrollY
+                lastDir < 0 -> minScrollY
+                else -> scrollY
+            })
+        }
+        return super.dispatchTouchEvent(e)
+    }
+
+    override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
+        // 触摸位置在 y 轴发生了移动，且不是在展开状态，就拦截事件
+        if (e.action == MotionEvent.ACTION_MOVE
+            && lastY != e.y
+            && state != BOTTOM_SHEET_STATE_EXTENDED) {
+            return true
+        }
+        lastY = e.y
+        return super.onInterceptTouchEvent(e)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(e: MotionEvent): Boolean {
+        return when (e.action) {
+            // down 在内容视图上时才做处理，由于 y 轴会发生滚动，所以这里还要对 y 轴进行滚动补偿
+            MotionEvent.ACTION_DOWN -> {
+                lastY = e.y
+                contentView?.let { v ->
+                    e.x in v.x..(v.x + v.width) && (e.y + scrollY) in v.y..(v.y + v.height)
+                } ?: false
+            }
+            // move 时如果可以自己可以滚动就处理
+            MotionEvent.ACTION_MOVE -> {
+                val dy = (lastY - e.y).toInt()
+                lastY = e.y
+                if (canScrollVertically(dy)) {
+                    scrollBy(0, dy)
+                    true
+                } else {
+                    false
+                }
+            }
+            else -> super.onTouchEvent(e)
+        }
+    }
+
+    override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
+        // 只处理垂直方向
+        return axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
+    }
+
+    override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
+        parentHelper.onNestedScrollAccepted(child, target, axes, type)
+    }
+
+    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
+        // 还没滚到最顶部就拦截所有子 view 的滚动
+        if (scrollY != maxScrollY) {
+            consumed[1] = dy
+            scrollBy(0, dy)
+        }
+    }
+
+    override fun onNestedScroll(
+        target: View,
+        dxConsumed: Int,
+        dyConsumed: Int,
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        type: Int
+    ) {
+        // 对于 target 未消耗的滚动，我们只处理 touch 造成的滚动，不处理 fling
+        // 因为展开状态时，向上滚动的 fling 可能会把内容带着往上滚动
+        if (type == ViewCompat.TYPE_TOUCH) {
+            scrollBy(0, dyUnconsumed)
+        }
+    }
+
+    override fun onStopNestedScroll(target: View, type: Int) {
+        parentHelper.onStopNestedScroll(target, type)
+    }
+
     /**
      * 滚动范围是[[minScrollY], [maxScrollY]]，根据方向判断垂直方向是否可以滚动
      */
@@ -209,89 +295,6 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
             maxScrollY -> BOTTOM_SHEET_STATE_EXTENDED
             else -> BOTTOM_SHEET_STATE_SCROLLING
         }
-    }
-
-    override fun dispatchTouchEvent(e: MotionEvent): Boolean {
-        when (e.action) {
-            // down 时复位上次的滚动方向
-            MotionEvent.ACTION_DOWN -> lastDir = 0
-            // up 或 cancel 时平滑滚动到目标位置
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> smoothScrollToY(when {
-                lastDir > 0 -> maxScrollY
-                lastDir < 0 -> minScrollY
-                else -> scrollY
-            })
-        }
-        return super.dispatchTouchEvent(e)
-    }
-
-    override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        // 触摸位置在 y 轴发生了移动，且不是在展开状态，就拦截事件
-        if (e.action == MotionEvent.ACTION_MOVE
-            && lastY != e.y
-            && state != BOTTOM_SHEET_STATE_EXTENDED) {
-            return true
-        }
-        lastY = e.y
-        return super.onInterceptTouchEvent(e)
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(e: MotionEvent): Boolean {
-        return when (e.action) {
-            // down 在内容视图上时才做处理，由于 y 轴会发生滚动，所以这里还要对 y 轴进行滚动补偿
-            MotionEvent.ACTION_DOWN -> contentView?.let { v ->
-                e.x in v.x..(v.x + v.width) && (e.y + scrollY) in v.y..(v.y + v.height)
-            } ?: false
-            // move 时如果可以自己可以滚动就处理
-            MotionEvent.ACTION_MOVE -> {
-                val dy = (lastY - e.y).toInt()
-                lastY = e.y
-                if (canScrollVertically(dy)) {
-                    scrollBy(0, dy)
-                    true
-                } else {
-                    false
-                }
-            }
-            else -> super.onTouchEvent(e)
-        }
-    }
-
-    override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
-        // 只处理垂直方向
-        return axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
-    }
-
-    override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
-        parentHelper.onNestedScrollAccepted(child, target, axes, type)
-    }
-
-    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        // 还没滚到最顶部就拦截所有子 view 的滚动
-        if (scrollY != maxScrollY) {
-            consumed[1] = dy
-            scrollBy(0, dy)
-        }
-    }
-
-    override fun onNestedScroll(
-        target: View,
-        dxConsumed: Int,
-        dyConsumed: Int,
-        dxUnconsumed: Int,
-        dyUnconsumed: Int,
-        type: Int
-    ) {
-        // 对于 target 未消耗的滚动，我们只处理 touch 造成的滚动，不处理 fling
-        // 因为展开状态时，向上滚动的 fling 可能会把内容带着往上滚动
-        if (type == ViewCompat.TYPE_TOUCH) {
-            scrollBy(0, dyUnconsumed)
-        }
-    }
-
-    override fun onStopNestedScroll(target: View, type: Int) {
-        parentHelper.onStopNestedScroll(target, type)
     }
 
 }

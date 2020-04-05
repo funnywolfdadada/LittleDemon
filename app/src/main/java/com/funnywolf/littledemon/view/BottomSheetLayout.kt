@@ -173,10 +173,8 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        // 触摸位置在 y 轴发生了移动，且不是在展开状态，就拦截事件
-        if (e.action == MotionEvent.ACTION_MOVE
-            && lastY != e.y
-            && state != BOTTOM_SHEET_STATE_EXTENDED) {
+        // 不是在展开状态，就拦截事件
+        if (state != BOTTOM_SHEET_STATE_EXTENDED) {
             return true
         }
         lastY = e.y
@@ -218,8 +216,8 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        // 还没滚到最顶部就拦截所有子 view 的滚动
-        if (scrollY != maxScrollY) {
+        // 不是在展开状态，就拦截滚动
+        if (state != BOTTOM_SHEET_STATE_EXTENDED) {
             consumed[1] = dy
             scrollBy(0, dy)
         }

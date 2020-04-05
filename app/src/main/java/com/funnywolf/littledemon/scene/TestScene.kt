@@ -65,7 +65,7 @@ class TestScene: Scene() {
             if (bottomSheetLayout?.contentView == null) {
                 bottomSheetLayout?.setContentView(
                     contentView?:return@setOnClickListener,
-                    300,
+                    400,
                     BOTTOM_SHEET_STATE_COLLAPSED
                 )
             } else {

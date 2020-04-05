@@ -356,7 +356,9 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 是否可以滚动取决于当前的滚动区域 [currRegion] 和要判断的方向:
+     * 是否可以滚动取决于当前的滚动区域 [currRegion] 和要判断的方向，这里的区域判断分得很细，可以使得一次只处理一个区域的滚动，
+     * 否则会存在在临界位置的一次大的滚动导致滚过了的问题。
+     * 具体规则:
      * [JELLY_REGION_LEFT] -> 只能在水平 [[minScrollX], 0] 范围内滚动
      * [JELLY_REGION_RIGHT] -> 只能在水平 [0, [maxScrollX]] 范围内滚动
      * [JELLY_REGION_TOP] -> 只能在垂直 [[minScrollY], 0] 范围内滚动

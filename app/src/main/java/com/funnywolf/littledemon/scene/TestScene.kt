@@ -17,9 +17,7 @@ import com.funnywolf.littledemon.utils.createSimpleStringHolderInfo
 import com.funnywolf.littledemon.utils.getRandomStrings
 import com.funnywolf.littledemon.utils.simpleInit
 import com.funnywolf.littledemon.utils.toast
-import com.funnywolf.littledemon.view.BOTTOM_SHEET_STATE_COLLAPSED
-import com.funnywolf.littledemon.view.BottomSheetLayout
-import com.funnywolf.littledemon.view.JellyLayout
+import com.funnywolf.littledemon.view.*
 
 class TestScene: Scene() {
 
@@ -39,6 +37,7 @@ class TestScene: Scene() {
 
         findViewById<RecyclerView>(R.id.recycler_view)?.also {
             val list = ArrayList<Any>()
+            list.add(HorizonModel())
             list.addAll(getRandomStrings(33))
             list.add(HorizonModel())
             list.addAll(getRandomStrings(33))
@@ -111,13 +110,13 @@ class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
                 .setBottomView(bottom, 333, 333)
                 .setLeftView(left, 333, 333)
                 .setRightView(right, 333, 333)
-                .addListeners(object: JellyLayout.Listener {
+                .listeners.add(object: JellyLayout.Listener {
                     override fun onScrollChanged(region: Int, percent: Float) {
                         when (region) {
-                            JellyLayout.REGION_TOP -> top.text = percent.toString()
-                            JellyLayout.REGION_BOTTOM -> bottom.text = percent.toString()
-                            JellyLayout.REGION_LEFT -> left.text = percent.toString()
-                            JellyLayout.REGION_RIGHT -> right.text = percent.toString()
+                            JELLY_REGION_TOP -> top.text = percent.toString()
+                            JELLY_REGION_BOTTOM -> bottom.text = percent.toString()
+                            JELLY_REGION_LEFT -> left.text = percent.toString()
+                            JELLY_REGION_RIGHT -> right.text = percent.toString()
                         }
                     }
 
@@ -126,10 +125,10 @@ class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
                             return
                         }
                         when (region) {
-                            JellyLayout.REGION_TOP -> it.context.toast("Top reset")
-                            JellyLayout.REGION_BOTTOM -> it.context.toast("Bottom reset")
-                            JellyLayout.REGION_LEFT -> it.context.toast("Left reset")
-                            JellyLayout.REGION_RIGHT -> it.context.toast("Right reset")
+                            JELLY_REGION_TOP -> it.context.toast("Top reset")
+                            JELLY_REGION_BOTTOM -> it.context.toast("Bottom reset")
+                            JELLY_REGION_LEFT -> it.context.toast("Left reset")
+                            JELLY_REGION_RIGHT -> it.context.toast("Right reset")
                         }
                     }
                 })

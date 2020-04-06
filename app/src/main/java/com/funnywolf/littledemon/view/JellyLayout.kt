@@ -7,17 +7,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.annotation.FloatRange
+import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
 import kotlin.math.abs
-
-/**
- * 果冻一般的弹性视图
- *
- * @author https://github.com/funnywolfdadada
- * @since 2020/4/4
- */
 
 /**
  * 未知区域
@@ -40,11 +35,23 @@ const val JELLY_REGION_LEFT = 3
  */
 const val JELLY_REGION_RIGHT = 4
 
+@IntDef(JELLY_REGION_NONE, JELLY_REGION_TOP, JELLY_REGION_BOTTOM, JELLY_REGION_LEFT, JELLY_REGION_RIGHT)
+@Retention(AnnotationRetention.SOURCE)
+annotation class JellyRegion
+
+/**
+ * 果冻一般的弹性视图
+ *
+ * @author https://github.com/funnywolfdadada
+ * @since 2020/4/4
+ */
+
 class JellyLayout : FrameLayout, NestedScrollingParent2 {
 
     /**
      * 当前滚动所在的区域，一次只支持在一个区域滚动
      */
+    @JellyRegion
     var currRegion = JELLY_REGION_NONE
         get() = when {
             scrollY < 0 -> JELLY_REGION_TOP
@@ -56,11 +63,44 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
         private set
 
     /**
+     * 当前区域的滚动进度
+     */
+    @FloatRange(from = 0.0, to = 1.0)
+    var currProcess = 0F
+        get() = when {
+            scrollY < 0 -> if (minScrollY != 0) { scrollY.toFloat() / minScrollY } else { 0F }
+            scrollY > 0 -> if (maxScrollY != 0) { scrollY.toFloat() / maxScrollY } else { 0F }
+            scrollX < 0 -> if (minScrollX != 0) { scrollX.toFloat() / minScrollX } else { 0F }
+            scrollX > 0 -> if (maxScrollX != 0) { scrollX.toFloat() / maxScrollX } else { 0F }
+            else -> 0F
+        }
+
+    /**
+     * 上次 x 轴的滚动方向，主要用来判断是否发生了滚动
+     */
+    var lastScrollXDir: Int = 0
+        private set
+
+    /**
+     * 上次 y 轴的滚动方向
+     */
+    var lastScrollYDir: Int = 0
+        private set
+
+    /**
+     * 发生滚动时的回调
+     */
+    var onScrollChangedListener: ((JellyLayout)->Unit)? = null
+
+    /**
+     * 复位时的回调，返回是否拦截处理复位事件
+     */
+    var onResetListener: ((JellyLayout)->Boolean)? = null
+
+    /**
      * 复位时的动画时间
      */
-    var resetDuration: Int = 555
-
-    val listeners = ArrayList<Listener>(2)
+    var resetDuration: Int = 500
 
     private var topView: View? = null
     private var bottomView: View? = null
@@ -144,6 +184,26 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
         return this
     }
 
+    fun setProcess(
+        @JellyRegion region: Int,
+        @FloatRange(from = 0.0, to = 1.0) process: Float = 0F,
+        smoothly: Boolean = true
+    ) {
+        var x = 0
+        var y = 0
+        when (region) {
+            JELLY_REGION_TOP -> y = (minScrollY * process).toInt()
+            JELLY_REGION_BOTTOM -> y = (maxScrollY * process).toInt()
+            JELLY_REGION_LEFT -> x = (minScrollX * process).toInt()
+            JELLY_REGION_RIGHT -> x = (maxScrollX * process).toInt()
+        }
+        if (smoothly) {
+            smoothScrollTo(x, y)
+        } else {
+            scrollTo(x, y)
+        }
+    }
+
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         topView?.also {
@@ -170,11 +230,22 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
 
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
         when (e.action) {
-            // down 时停掉 scroller 的滚动
-            MotionEvent.ACTION_DOWN -> scroller.abortAnimation()
-            // up 或 cancel 时复位到原始位置
+            // down 时停掉 scroller 的滚动，复位滚动方向
+            MotionEvent.ACTION_DOWN -> {
+                scroller.abortAnimation()
+                lastScrollXDir = 0
+                lastScrollYDir = 0
+            }
+            // up 或 cancel 时复位到原始位置，被拦截就不再处理
             // 在这里处理是因为自身可能并没有处理任何 touch 事件，也就不能在 onToucheEvent 中处理到 up 事件
-            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> resetScroll()
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
+                // 发生了移动，且不处于复位状态，且未被拦截，则执行复位操作
+                if ((lastScrollXDir != 0 || lastScrollYDir != 0)
+                    && currRegion != JELLY_REGION_NONE
+                    && onResetListener?.invoke(this) != true) {
+                    smoothScrollTo(0, 0)
+                }
+            }
         }
         return super.dispatchTouchEvent(e)
     }
@@ -331,17 +402,13 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 复位自身的滚动，分发复位事件，利用 scroller 平滑复位
+     * 利用 scroller 平滑滚动
      */
-    private fun resetScroll() {
-        // 滚动区域已知才去分发
-        val region = currRegion
-        if (region != JELLY_REGION_NONE) {
-            listeners.forEach {
-                it.onReset(region, getScrollPercent())
-            }
+    private fun smoothScrollTo(x: Int, y: Int) {
+        if (scrollX == x && scrollY == y) {
+            return
         }
-        scroller.startScroll(scrollX, scrollY, -scrollX, -scrollY, resetDuration)
+        scroller.startScroll(scrollX, scrollY, x - scrollX, y - scrollY, resetDuration)
         invalidate()
     }
 
@@ -439,39 +506,9 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
      */
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
-        val region = currRegion
-        listeners.forEach {
-            it.onScrollChanged(region, getScrollPercent())
-        }
-    }
-
-    /**
-     * 根据滚动区域，计算当前区域露出的百分比
-     */
-    private fun getScrollPercent(): Float {
-        return when (currRegion) {
-            JELLY_REGION_TOP -> if (minScrollY != 0) { scrollY * 100F / minScrollY } else { 0F }
-            JELLY_REGION_BOTTOM -> if (maxScrollY != 0) { scrollY * 100F / maxScrollY } else { 0F }
-            JELLY_REGION_LEFT -> if (minScrollX != 0) { scrollX * 100F / minScrollX } else { 0F }
-            JELLY_REGION_RIGHT -> if (maxScrollX != 0) { scrollX * 100F / maxScrollX } else { 0F }
-            else -> 0F
-        }
-    }
-
-    interface Listener {
-        /**
-         * 滚动发生变化时的回调
-         * @param region 当前滚动所在的区域
-         * @param percent 当前区域露出的百分比
-         */
-        fun onScrollChanged(region: Int, percent: Float) {}
-
-        /**
-         * 复位时的回调
-         * @param region 当前滚动所在的区域
-         * @param percent 当前区域露出的百分比
-         */
-        fun onReset(region: Int, percent: Float) {}
+        lastScrollXDir = l - oldl
+        lastScrollYDir = t - oldt
+        onScrollChangedListener?.invoke(this)
     }
 
 }

@@ -89,49 +89,53 @@ class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
                 v.setBackgroundColor(0x800FF000.toInt())
                 v.textSize = 16F
                 v.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+                v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
             val bottom = TextView(it.context).also {v ->
                 v.setBackgroundColor(0x8000FF00.toInt())
                 v.textSize = 16F
                 v.gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
+                v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
             val left = TextView(it.context).also { v ->
                 v.setBackgroundColor(0x80000FF0.toInt())
                 v.textSize = 16F
                 v.gravity = Gravity.CENTER_VERTICAL or Gravity.END
+                v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
             val right = TextView(it.context).also { v ->
                 v.setBackgroundColor(0x800000FF.toInt())
                 v.textSize = 16F
                 v.gravity = Gravity.CENTER_VERTICAL or Gravity.START
+                v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
             it
                 .setTopView(top, 333,  333)
                 .setBottomView(bottom, 333, 333)
                 .setLeftView(left, 333, 333)
                 .setRightView(right, 333, 333)
-                .listeners.add(object: JellyLayout.Listener {
-                    override fun onScrollChanged(region: Int, percent: Float) {
-                        when (region) {
-                            JELLY_REGION_TOP -> top.text = percent.toString()
-                            JELLY_REGION_BOTTOM -> bottom.text = percent.toString()
-                            JELLY_REGION_LEFT -> left.text = percent.toString()
-                            JELLY_REGION_RIGHT -> right.text = percent.toString()
-                        }
+            it.onScrollChangedListener = { jl ->
+                when (jl.currRegion) {
+                    JELLY_REGION_TOP -> top.text = jl.currProcess.toString()
+                    JELLY_REGION_BOTTOM -> bottom.text = jl.currProcess.toString()
+                    JELLY_REGION_LEFT -> left.text = jl.currProcess.toString()
+                    JELLY_REGION_RIGHT -> right.text = jl.currProcess.toString()
+                }
+            }
+            it.onResetListener = { jl ->
+                if (jl.currProcess < 0.5) {
+                    false
+                } else {
+                    jl.setProcess(jl.currRegion, 1F)
+                    when (jl.currRegion) {
+                        JELLY_REGION_TOP -> it.context.toast("Top reset")
+                        JELLY_REGION_BOTTOM -> it.context.toast("Bottom reset")
+                        JELLY_REGION_LEFT -> it.context.toast("Left reset")
+                        JELLY_REGION_RIGHT -> it.context.toast("Right reset")
                     }
-
-                    override fun onReset(region: Int, percent: Float) {
-                        if (percent < 80) {
-                            return
-                        }
-                        when (region) {
-                            JELLY_REGION_TOP -> it.context.toast("Top reset")
-                            JELLY_REGION_BOTTOM -> it.context.toast("Bottom reset")
-                            JELLY_REGION_LEFT -> it.context.toast("Left reset")
-                            JELLY_REGION_RIGHT -> it.context.toast("Right reset")
-                        }
-                    }
-                })
+                    true
+                }
+            }
         }
         recyclerView.simpleInit(6, 0x800F0000.toInt())
         recyclerView.layoutManager = LinearLayoutManager(v.context, RecyclerView.HORIZONTAL, false)

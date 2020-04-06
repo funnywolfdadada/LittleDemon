@@ -1,6 +1,7 @@
 package com.funnywolf.littledemon.scene
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -51,6 +52,40 @@ class TestScene: Scene() {
 
         findViewById<BottomSheetLayout>(R.id.bottom_sheet)?.also {
             bottomSheetLayout = it
+
+            it.onProcessChangedListener = { _ ->
+                Log.d("zdl", "onProcessChangedListener: state = ${it.state}, process = ${it.process}")
+            }
+            var lastReleaseState = BOTTOM_SHEET_STATE_COLLAPSED
+            it.onReleaseListener = { _ ->
+                Log.d("zdl", "onReleaseListener: state = ${it.state}, process = ${it.process}")
+                val process = it.process
+                when {
+                    process < 0.2 -> {
+                        if (lastReleaseState == BOTTOM_SHEET_STATE_EXTENDED) {
+                            it.postDelayed({ it.removeContentView() }, 200)
+                        }
+                        it.setProcess(0F)
+                        lastReleaseState = BOTTOM_SHEET_STATE_COLLAPSED
+                    }
+                    process > 0.8 -> {
+                        it.setProcess(1F)
+                        lastReleaseState = BOTTOM_SHEET_STATE_EXTENDED
+                    }
+                    it.lastDir > 0 -> {
+                        it.setProcess(1F)
+                        lastReleaseState = BOTTOM_SHEET_STATE_EXTENDED
+                    }
+                    else -> {
+                        if (lastReleaseState == BOTTOM_SHEET_STATE_EXTENDED) {
+                            it.postDelayed({ it.removeContentView() }, 200)
+                        }
+                        it.setProcess(0F)
+                        lastReleaseState = BOTTOM_SHEET_STATE_COLLAPSED
+                    }
+                }
+                true
+            }
 
             LayoutInflater.from(view.context).inflate(R.layout.scene_layout_simple_list, it, false)?.also { cv ->
                 cv.findViewById<RecyclerView>(R.id.recycler_view)?.also { rv -> rv.simpleInit(55) }

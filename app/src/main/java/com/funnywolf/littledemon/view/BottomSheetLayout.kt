@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.annotation.FloatRange
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
@@ -37,17 +38,40 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
      * 内容视图的状态
      */
     var state = 0
-        private set(value) {
-            if(value != field) {
-                field = value
-                stateListener?.invoke(value)
-            }
+        get() = when (scrollY) {
+            minScrollY -> BOTTOM_SHEET_STATE_COLLAPSED
+            maxScrollY -> BOTTOM_SHEET_STATE_EXTENDED
+            else -> BOTTOM_SHEET_STATE_SCROLLING
         }
+        private set
 
     /**
-     * 当内容视图的状态发生变化时的回调
+     * 当前滚动的进度，[BOTTOM_SHEET_STATE_COLLAPSED] 时是 0，[BOTTOM_SHEET_STATE_EXTENDED] 时是 1
      */
-    private var stateListener: ((Int)->Unit)? = null
+    @FloatRange(from = 0.0, to = 1.0)
+    var process = 0F
+        get() = if (maxScrollY > minScrollY) {
+            (scrollY - minScrollY).toFloat() / (maxScrollY - minScrollY)
+        } else {
+            0F
+        }
+        private set
+
+    /**
+     * 上一次发生滚动时的滚动方向，用于在松手时判断需要滚动到的位置
+     */
+    var lastDir = 0
+        private set
+
+    /**
+     * 当 [process] 发生变化时的回调
+     */
+    var onProcessChangedListener: ((BottomSheetLayout)->Unit)? = null
+
+    /**
+     * 松开回弹时的回调，返回是否拦截该事件
+     */
+    var onReleaseListener: ((BottomSheetLayout)->Boolean)? = null
 
     /**
      * 内容视图
@@ -81,11 +105,6 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
     private var lastY = 0F
 
     /**
-     * 上一次发生滚动时的滚动方向，用于在松手时判断需要滚动到的位置
-     */
-    private var lastDir = 0
-
-    /**
      * 用来处理平滑滚动
      */
     private val scroller = Scroller(context)
@@ -99,14 +118,12 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
     fun setContentView(
         contentView: View,
         minShowingHeight: Int,
-        initState: Int = BOTTOM_SHEET_STATE_COLLAPSED,
-        stateListener: ((Int)->Unit)? = null
+        initState: Int = BOTTOM_SHEET_STATE_COLLAPSED
     ) {
         removeAllViews()
         this.contentView = contentView
         this.minShowingHeight = if (minShowingHeight < 0) { 0 } else { minShowingHeight }
         this.initState = initState
-        this.stateListener = stateListener
         addView(contentView)
     }
 
@@ -116,24 +133,16 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
         contentView = null
         minShowingHeight = 0
         initState = 0
-        stateListener = null
         minScrollY = 0
         maxScrollY = 0
     }
 
-    fun extend(smoothly: Boolean = true) {
+    fun setProcess(@FloatRange(from = 0.0, to = 1.0) process: Float, smoothly: Boolean = true) {
+        val y = ((maxScrollY - minScrollY) * process + minScrollY).toInt()
         if (smoothly) {
-            smoothScrollToY(maxScrollY)
+            smoothScrollToY(y)
         } else {
-            scrollTo(0, maxScrollY)
-        }
-    }
-
-    fun collapse(smoothly: Boolean = true) {
-        if (smoothly) {
-            smoothScrollToY(minScrollY)
-        } else {
-            scrollTo(0, minScrollY)
+            scrollTo(0, y)
         }
     }
 
@@ -151,9 +160,9 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
             minScrollY = it.top + minShowingHeight - height
             maxScrollY = it.bottom - height
             if (initState == BOTTOM_SHEET_STATE_EXTENDED) {
-                extend(false)
+                setProcess(1F, false)
             } else {
-                collapse(false)
+                setProcess(0F, false)
             }
         }
     }
@@ -163,18 +172,25 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
             // down 时复位上次的滚动方向
             MotionEvent.ACTION_DOWN -> lastDir = 0
             // up 或 cancel 时平滑滚动到目标位置
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> smoothScrollToY(when {
-                lastDir > 0 -> maxScrollY
-                lastDir < 0 -> minScrollY
-                else -> scrollY
-            })
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // 发生了移动，且处于滚动中的状态，且未被拦截，则自己处理
+                if (lastDir != 0
+                    && state == BOTTOM_SHEET_STATE_SCROLLING
+                    && onReleaseListener?.invoke(this) != true) {
+                    smoothScrollToY(if (lastDir > 0) { maxScrollY } else { minScrollY })
+                    // 这里返回 true 防止分发给子 view 导致其抖动
+                    return true
+                }
+            }
         }
         return super.dispatchTouchEvent(e)
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        // 不是在展开状态，就拦截事件
-        if (state != BOTTOM_SHEET_STATE_EXTENDED) {
+        // 不拦截 down，发生了移动，且不是在展开状态，就拦截事件
+        if (e.action != MotionEvent.ACTION_DOWN
+            && lastY != e.y
+            && state != BOTTOM_SHEET_STATE_EXTENDED) {
             return true
         }
         lastY = e.y
@@ -288,11 +304,7 @@ class BottomSheetLayout: FrameLayout, NestedScrollingParent2 {
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
         lastDir = t - oldt
-        state = when (scrollY) {
-            minScrollY -> BOTTOM_SHEET_STATE_COLLAPSED
-            maxScrollY -> BOTTOM_SHEET_STATE_EXTENDED
-            else -> BOTTOM_SHEET_STATE_SCROLLING
-        }
+        onProcessChangedListener?.invoke(this)
     }
 
 }

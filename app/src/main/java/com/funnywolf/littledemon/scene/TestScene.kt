@@ -138,37 +138,45 @@ class HorizonViewHolder(v: View): SimpleHolder<HorizonModel>(v) {
                 v.gravity = Gravity.CENTER_VERTICAL or Gravity.END
                 v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
-            val right = TextView(it.context).also { v ->
-                v.setBackgroundColor(0x800000FF.toInt())
-                v.textSize = 16F
-                v.gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            val right = RightDragToOpenView(it.context).also { v ->
                 v.setOnClickListener { _ -> it.setProcess(JELLY_REGION_NONE) }
             }
             it
                 .setTopView(top, 333,  333)
                 .setBottomView(bottom, 333, 333)
                 .setLeftView(left, 333, 333)
-                .setRightView(right, 333, 333)
+                .setRightView(right, 333, ViewGroup.LayoutParams.MATCH_PARENT)
             it.onScrollChangedListener = { jl ->
                 when (jl.currRegion) {
                     JELLY_REGION_TOP -> top.text = jl.currProcess.toString()
                     JELLY_REGION_BOTTOM -> bottom.text = jl.currProcess.toString()
                     JELLY_REGION_LEFT -> left.text = jl.currProcess.toString()
-                    JELLY_REGION_RIGHT -> right.text = jl.currProcess.toString()
+                    JELLY_REGION_RIGHT -> right.process = jl.currProcess
                 }
             }
             it.onResetListener = { jl ->
                 if (jl.currProcess < 0.5) {
                     false
                 } else {
-                    jl.setProcess(jl.currRegion, 1F)
-                    when (jl.currRegion) {
-                        JELLY_REGION_TOP -> it.context.toast("Top reset")
-                        JELLY_REGION_BOTTOM -> it.context.toast("Bottom reset")
-                        JELLY_REGION_LEFT -> it.context.toast("Left reset")
-                        JELLY_REGION_RIGHT -> it.context.toast("Right reset")
+                    val handle = when (jl.currRegion) {
+                        JELLY_REGION_TOP -> {
+                            it.context.toast("Top reset")
+                            true
+                        }
+                        JELLY_REGION_BOTTOM -> {
+                            it.context.toast("Bottom reset")
+                            true
+                        }
+                        JELLY_REGION_LEFT -> {
+                            it.context.toast("Left reset")
+                            true
+                        }
+                        else -> false
                     }
-                    true
+                    if (handle) {
+                        jl.setProcess(jl.currRegion, 1F)
+                    }
+                    handle
                 }
             }
         }

@@ -42,6 +42,11 @@
                     android:id="@+id/layout_manager"
                     android:text="layout_manager"/>
 
+            <TextView
+                    style="@style/EntryButtonStyle"
+                    android:id="@+id/transition"
+                    android:text="Transition"/>
+
         </LinearLayout>
     </ScrollView>
 

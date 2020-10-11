@@ -6,7 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 
 apply from: rootProject.projectDir.absolutePath + "/utils.gradle"
 
-apply plugin: "com.littledemon.plugin"
+//apply plugin: "com.littledemon.plugin"
 
 android {
     compileSdkVersion 28
@@ -33,7 +33,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.0-M1'
 
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha04'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha04'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0-alpha03'

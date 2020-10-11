@@ -31,6 +31,7 @@ class MainScene : Scene() {
         bind(R.id.view_drag_test, ViewDragHelperTestScene::class.java)
         bind(R.id.item_decoration, ItemDecorationTestScene::class.java)
         bind(R.id.layout_manager, LayoutManagerTestScene::class.java)
+        bind(R.id.transition, TransitionScene::class.java)
     }
 
     private fun bind(id: Int, sceneClass: Class<out Scene>) {

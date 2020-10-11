@@ -6,11 +6,13 @@ apply plugin: 'kotlin-android-extensions'
 
 apply from: rootProject.projectDir.absolutePath + "/utils.gradle"
 
+apply plugin: "com.littledemon.plugin"
+
 android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.funnywolf.littledemon"
-        minSdkVersion 22
+        minSdkVersion 24
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -31,32 +33,24 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.0-M1'
 
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha04'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha04'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0-alpha03'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0-alpha03'
 
     implementation "io.reactivex.rxjava2:rxjava:2.2.8"
-    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha09'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha02'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-alpha03'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.2.0-alpha03'
-    implementation 'androidx.customview:customview:1.1.0-alpha01'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.5.0'
+    implementation 'com.google.android.material:material:1.2.0-beta01'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-rc01'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.0-alpha03'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.3.0-alpha03'
+    implementation 'androidx.customview:customview:1.1.0-rc01'
     implementation 'com.google.android:flexbox:1.1.0'
-    implementation "com.funnywolf:hollowkit:0.0.4"
+    implementation 'com.github.funnywolfdadada:HollowKit:1.1'
     implementation "com.bytedance.scene:scene:1.0.0"
     implementation "com.bytedance.scene:scene-ui:1.0.0"
     implementation "com.bytedance.scene:scene-shared-element-animation:1.0.0"
     implementation "com.bytedance.scene:scene-ktx:1.0.0"
+    implementation "io.coil-kt:coil:0.11.0"
 }
-
-println("""
-In app:build.gradle ->
-    gradle is ${gradle.hashCode()}
-    Home dir: ${gradle.gradleHomeDir}
-    User home dir: ${gradle.gradleUserHomeDir}
-    Project: ${project.hashCode()}
-    Version Name: ${getVersionNameAdvanced()}
-""")

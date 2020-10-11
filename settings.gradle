@@ -1,11 +1,4 @@
+include ':littledemon'
 include ':app'
 
 apply from: rootProject.projectDir.absolutePath + "/utils.gradle"
-
-println("""
-In settings.gradle ->
-    gradle is ${gradle.hashCode()}
-    Home dir: ${gradle.gradleHomeDir}
-    User home dir: ${gradle.gradleUserHomeDir}
-    Parent: ${gradle.parent}
-""")
